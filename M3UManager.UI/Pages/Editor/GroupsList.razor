@@ -1,0 +1,24 @@
+﻿<div id="parent-row" class="row p-2" style="height:90vh;overflow:hidden">
+    <div class="card border-0 col-3" style="height:100%;">
+        <input class="form-control" @oninput="FilterGroups" />
+        <div class="card-header bg-white btn-group">
+            <button class="btn btn-sm btn-outline-danger float-end" @onclick="RemoveModel"><i class="bi bi-x-circle"></i></button>
+            <button class="btn btn-sm btn-outline-danger" @onclick="DeleteGroups"><i class="bi bi-trash"></i></button>
+            <button class="btn btn-sm btn-outline-primary" @onclick="SaveList"><i class="bi bi-save"></i></button>
+        </div>
+        <select class="card-body list-group" style="border:0;outline:none" @oninput="OnSelectGroupsInput" multiple>
+            @foreach (var group in filtredGroups)
+            {
+                if (!string.IsNullOrEmpty(group.Value.TrimedName))
+                {
+                    <option class="list-group-item @(IsInBoothLists( group.Value.TrimedName)?"bg-success":"")" value="@group.Value.TrimedName">
+                        <span class="bg-danger badge">@group.Value.Channels.Count()</span> - @group.Value.Name
+                    </option>
+                }
+            }
+        </select>
+    </div>
+    <div class="card col p-0 mx-1" style="height:100%;overflow:hidden;position:relative">
+        <ChannelsList @ref="channelsList"></ChannelsList>
+    </div>
+</div>

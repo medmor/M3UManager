@@ -1,0 +1,19 @@
+﻿<div id="parent-row" class="row p-2" style="height:90vh;overflow:hidden">
+    <div class="card border-0 col-3" style="height:100%;">
+        <input class="form-control" @oninput="FilterGroups" />
+        <select class="card-body list-group" style="border:0;outline:none" @oninput="OnSelectGroupsInput" multiple>
+            @foreach (var group in filtredGroups)
+            {
+                if (!string.IsNullOrEmpty(group.Value.TrimedName) && group.Value.Channels.Count() > 0)
+                {
+                    <option class="list-group-item" value="@group.Value.TrimedName">
+                        <span class="bg-danger badge">@group.Value.Channels.Count()</span> - @group.Value.Name
+                    </option>
+                }
+            }
+        </select>
+    </div>
+    <div class="card col p-0 mx-1" style="height:100%;overflow:hidden;position:relative">
+        <ChannelsList @ref="channelsList"></ChannelsList>
+    </div>
+</div>

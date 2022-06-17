@@ -1,0 +1,15 @@
+﻿@page "/Favorites"
+
+<div class="row">
+    @if (favoritesService.FavoritesGroupList == null)
+    {
+        <h1 class="btn btn-outline-primary">Add some channels to favorites</h1>
+    }
+    else
+    {
+        <div class="col">
+            <Groups Id="groupList1"></Groups>
+        </div>
+    }
+
+</div>
