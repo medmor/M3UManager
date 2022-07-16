@@ -60,7 +60,7 @@ namespace M3UManager.Services
                 process.Kill();
             }
             ProcessStartInfo psi = new ProcessStartInfo();
-            psi.FileName = "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe";
+            psi.FileName = "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe";
             psi.Arguments = "-vvv " + channel.Trim();
             process = Process.Start(psi);
         }
