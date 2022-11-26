@@ -12,6 +12,7 @@ namespace M3UManager.UI.Pages.Editor
         [Inject] IFileIOService fileIOService { get; set; }
         [Inject] IFavoritesService favoritesService { get; set; }
         [Parameter] public int M3UListModelId { get; set; }
+        [CascadingParameter] public Editor editor { get; set; }
         List<M3UChannel>? Channels { get; set; }
         List<M3UChannel> filtredChannels { get; set; } = new List<M3UChannel>();
         int filtredChannelsIndex { get; set; } = 0;
@@ -67,6 +68,7 @@ namespace M3UManager.UI.Pages.Editor
         void RemoveChannels()
         {
             m3UService.DeleteChannelsFromGroups(M3UListModelId, selectedChannels);
+            OnGroupChanged(Channels.Where(c => !selectedChannels.Contains(c)).ToList());
         }
         void PlayOnVlc() => fileIOService.OpenWithVlc(selectedChannel.Url);
         bool IsChannelInFavorite() => favoritesService.IsChannelInFavorites(selectedChannel);
