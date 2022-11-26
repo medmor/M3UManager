@@ -7,27 +7,26 @@ namespace M3UManager.UI.Pages.Editor
 {
     public partial class GroupsList
     {
-        [Inject] NavigationManager navigationManager { get; set; }
         [Inject] IM3UService m3UService { get; set; }
         [Inject] IFileIOService fileIO { get; set; }
         [Inject] IJSRuntime js { get; set; }
 
-        [Parameter] public M3UGroupList M3UListModel { get; set; }
-        [Parameter] public string Id { get; set; } = "";
+        [Parameter] public int M3UListModelId { get; set; }
+        [CascadingParameter] public Editor editor { get; set; }
         ChannelsList channelsList;
         Dictionary<string, M3UGroup> filtredGroups;
         string groupFilterString = "";
 
         protected override void OnInitialized()
         {
-            filtredGroups = M3UListModel.M3UGroups;
+            filtredGroups = m3UService.GetModel(M3UListModelId).M3UGroups;
         }
 
         void SaveList()
         {
             try
             {
-                fileIO.SaveDictionaryAsM3U(M3UListModel.M3UGroups);
+                fileIO.SaveDictionaryAsM3U(m3UService.GetModel(M3UListModelId).M3UGroups);
                 js.InvokeVoidAsync("Alert", "Save succeeded");
             }
             catch
@@ -37,14 +36,14 @@ namespace M3UManager.UI.Pages.Editor
         }
         void DeleteGroups()
         {
-            m3UService.DeleteGroupsFromList(M3UListModel);
+            m3UService.DeleteGroupsFromList(M3UListModelId);
             FilterGroups(new ChangeEventArgs() { Value = groupFilterString });
             StateHasChanged();
         }
         void RemoveModel()
         {
-            m3UService.RemoveGroupList(M3UListModel);
-            navigationManager.NavigateTo("/", true);
+            m3UService.RemoveGroupList(M3UListModelId);
+            editor.Refresh();
         }
         void OnSelectGroupsInput(ChangeEventArgs args)
         {
@@ -52,18 +51,19 @@ namespace M3UManager.UI.Pages.Editor
             List<M3UChannel> channels = new List<M3UChannel>();
             foreach (var key in (string[])args.Value)
             {
-                channels = channels.Concat(M3UListModel.M3UGroups[key].Channels).ToList();
+                channels = channels.Concat(m3UService.GetModel(M3UListModelId).M3UGroups[key].Channels).ToList();
             }
             channelsList.OnGroupChanged(channels);
         }
         void FilterGroups(ChangeEventArgs args)
         {
+            var model = m3UService.GetModel(M3UListModelId);
             groupFilterString = (string)args.Value;
             if (string.IsNullOrEmpty(groupFilterString))
-                filtredGroups = M3UListModel.M3UGroups;
+                filtredGroups = model.M3UGroups;
             else
             {
-                filtredGroups = M3UListModel.M3UGroups
+                filtredGroups = model.M3UGroups
                     .Where(g => g.Value.Name.Contains(groupFilterString, System.StringComparison.CurrentCultureIgnoreCase))
                     .ToDictionary(g => g.Key, g => g.Value);
             }

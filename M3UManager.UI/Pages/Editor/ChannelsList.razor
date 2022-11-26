@@ -2,7 +2,7 @@
 {
     <div class="mb-1">
         <div class="input-group">
-            <input class="form-control" @oninput="FilterChannels" />
+            <input class="form-control" placeholder="search channels" @oninput="FilterChannels" />
             <div class="btn-group m-1">
                 <button class="btn btn-sm btn-primary" @onclick="()=>ScrollToFiltred(-1)" disabled="@FilterButtonDisabled()">
                     <i class="bi bi-arrow-bar-left"></i>
@@ -12,6 +12,8 @@
                 </button>
                 @if (selectedChannel != null)
                 {
+                    <button class="btn btn-sm btn-danger" @onclick="RemoveChannels"><i class="bi bi-trash"></i></button>
+                    <button class="btn btn-sm btn-primary" @onclick="PlayOnVlc"><i class="bi bi-play"></i></button>
                     if (IsChannelInFavorite())
                     {
                         <button class="btn btn-sm btn-danger" @onclick="RemoveFromFavorites"><i class="bi bi-star"></i></button>
@@ -24,20 +26,19 @@
             </div>
         </div>
     </div>
-    <select id="channels-container" class="card-body list-group" style="border:0;outline:none" multiple>
+    <select id="channels-container" style="height:100%" @oninput="OnSelectchannelsInput" multiple>
         @for (int i = 0; i < channelsToShow; i++)
         {
             var channel = Channels[i];
-            <option id="@channel.Name" class="list-group-item @(filtredChannels.Contains(channel)?"bg-success":"")"
-            @ondblclick="()=>PlayOnVlc(channel)" @onclick="()=>SelectChannel(channel)" style="line-height:1em">
+            <option id="@channel.Name" class="@OptionClass(channel)">
                 @channel.Name
             </option>
         }
-        @if (channelsToShow < Channels.Count() - 1)
-        {
-            <option class="btn btn-primary" @onclick="LoadMore">Load more</option>
-        }
     </select>
+    @if (channelsToShow < Channels.Count() - 1)
+    {
+        <button class="btn btn-outline-dark" @onclick="LoadMore">Load more</button>
+    }
 
     @for (int i = 0; i < 100; i++)
     {

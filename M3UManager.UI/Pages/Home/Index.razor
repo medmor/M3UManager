@@ -1,6 +1,15 @@
-﻿@page "/"
+﻿@inject NavigationManager navigationManager;
+
+@page "/"
 
 
 <h1>Hello</h1>
 
 
+@code{
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        navigationManager.NavigateTo("Editor");
+    }
+}

@@ -8,21 +8,32 @@ namespace M3UManager.UI.Pages.Editor
     public partial class ChannelsList
     {
         [Inject] IJSRuntime JS { get; set; }
+        [Inject] IM3UService m3UService { get; set; }
         [Inject] IFileIOService fileIOService { get; set; }
         [Inject] IFavoritesService favoritesService { get; set; }
+        [Parameter] public int M3UListModelId { get; set; }
         List<M3UChannel>? Channels { get; set; }
         List<M3UChannel> filtredChannels { get; set; } = new List<M3UChannel>();
         int filtredChannelsIndex { get; set; } = 0;
+        List<M3UChannel> selectedChannels { get; set; }
         M3UChannel? selectedChannel { get; set; }
         int channelsToShow = 200;
 
-        public void OnGroupChanged(List<M3UChannel> c)
+        public async Task OnGroupChanged(List<M3UChannel> c)
         {
             Channels = c;
             channelsToShow = c.Count > 200 ? 200 : c.Count - 1;
+            selectedChannel = null;
+            selectedChannels = null;
             StateHasChanged();
+            await JS.InvokeVoidAsync("ChannelList.deselectItems");
         }
-        void SelectChannel(M3UChannel c) => selectedChannel = c;
+        void OnSelectchannelsInput(ChangeEventArgs args)
+        {
+            var selected = (string[])args.Value;
+            selectedChannels = Channels.Where(c => selected.Any(cc => cc == c.Name)).ToList();
+            selectedChannel = selectedChannels[0];
+        }
         async Task FilterChannels(ChangeEventArgs args)
         {
             filtredChannels.Clear();
@@ -53,7 +64,11 @@ namespace M3UManager.UI.Pages.Editor
         }
         async Task CreateIndicators(string[] ids) => await JS.InvokeVoidAsync("ChannelList.addIndicators", ids);
         bool FilterButtonDisabled() => filtredChannels.Count() == 0;
-        void PlayOnVlc(M3UChannel channel) => fileIOService.OpenWithVlc(channel.Url);
+        void RemoveChannels()
+        {
+            m3UService.DeleteChannelsFromGroups(M3UListModelId, selectedChannels);
+        }
+        void PlayOnVlc() => fileIOService.OpenWithVlc(selectedChannel.Url);
         bool IsChannelInFavorite() => favoritesService.IsChannelInFavorites(selectedChannel);
         void AddToFavorites() => favoritesService.AddChannelToFavory(selectedChannel);
         void RemoveFromFavorites() => favoritesService.RemoveChannelFromFavorites(selectedChannel);
@@ -63,6 +78,18 @@ namespace M3UManager.UI.Pages.Editor
             if (channelsToShow > Channels.Count() - 1)
                 channelsToShow = Channels.Count() - 1;
         }
-
+        string OptionClass(M3UChannel channel)
+        {
+            var cl = "";
+            if (filtredChannels.Contains(channel))
+            {
+                cl += "bg-success";
+            }
+            if (selectedChannel == channel)
+            {
+                cl += " border border-3 border-warning";
+            }
+            return cl;
+        }
     }
 }

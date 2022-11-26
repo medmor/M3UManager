@@ -2,6 +2,12 @@
 
     indicators: undefined,
 
+    list: undefined,
+
+    init() {
+        this.indicators = document.getElementsByClassName("indicator");
+    },
+
     scrollToFiltred(id) {
         var element = document.getElementById(id);
         var topPos = element.offsetTop - 40;
@@ -21,8 +27,12 @@
                 console.log(this.indicators[i].style.top, topPos, containerScrollHeight)
             }
         }
+    },
+
+    deselectItems() {
+        document.getElementById("channels-container").selectedIndex = -1;
     }
 }
 window.onload = () => {
-    ChannelList.indicators = document.getElementsByClassName("indicator");
+    ChannelList.init();
 }

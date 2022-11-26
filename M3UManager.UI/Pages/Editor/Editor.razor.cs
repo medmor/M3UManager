@@ -23,6 +23,7 @@ namespace M3UManager.UI.Pages.Editor
                 m3uService.AddGroupList(textFile);
             }
         }
+
         bool isOdd(int num) => !(num % 2 == 0);
         void CompareLists()
         {

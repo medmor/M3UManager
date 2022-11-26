@@ -1,24 +1,25 @@
-﻿<div id="parent-row" class="row p-2" style="height:90vh;overflow:hidden">
-    <div class="card border-0 col-3" style="height:100%;">
-        <input class="form-control" @oninput="FilterGroups" />
-        <div class="card-header bg-white btn-group">
-            <button class="btn btn-sm btn-outline-danger float-end" @onclick="RemoveModel"><i class="bi bi-x-circle"></i></button>
-            <button class="btn btn-sm btn-outline-danger" @onclick="DeleteGroups"><i class="bi bi-trash"></i></button>
-            <button class="btn btn-sm btn-outline-primary" @onclick="SaveList"><i class="bi bi-save"></i></button>
+﻿<div id="parent-row" class="row" style="height:calc(100vh - (100px));">
+    <div class="col-4 card" style="height:100%;">
+        <input class="form-control mb-1" placeholder="shearch group" @oninput="FilterGroups" />
+        <div class="btn-group d-flex">
+            <button class="btn btn-sm btn-outline-danger float-end" @onclick="RemoveModel" title="remove list"><i class="bi bi-x-circle"></i></button>
+            <button class="btn btn-sm btn-outline-danger" @onclick="DeleteGroups"><i class="bi bi-trash" title="delete groups"></i></button>
+            <button class="btn btn-sm btn-outline-primary" @onclick="SaveList"><i class="bi bi-save" title="save list"></i></button>
         </div>
-        <select class="card-body list-group" style="border:0;outline:none" @oninput="OnSelectGroupsInput" multiple>
+        <select style="width:100%;height:100%" @oninput="OnSelectGroupsInput" multiple>
             @foreach (var group in filtredGroups)
             {
                 if (!string.IsNullOrEmpty(group.Value.TrimedName))
                 {
-                    <option class="list-group-item @(IsInBoothLists( group.Value.TrimedName)?"bg-success":"")" value="@group.Value.TrimedName">
-                        <span class="bg-danger badge">@group.Value.Channels.Count()</span> - @group.Value.Name
+                    <option class="@(IsInBoothLists( group.Value.TrimedName)?"bg-success":"")" 
+                    value="@group.Value.TrimedName" title="@group.Value.Name">
+                        @group.Value.Channels.Count()-@group.Value.Name
                     </option>
                 }
             }
         </select>
     </div>
-    <div class="card col p-0 mx-1" style="height:100%;overflow:hidden;position:relative">
-        <ChannelsList @ref="channelsList"></ChannelsList>
+    <div class="card col " style="height:100%">
+        <ChannelsList @ref="channelsList" M3UListModelId="M3UListModelId"></ChannelsList>
     </div>
 </div>

@@ -16,9 +16,9 @@ namespace M3UManager.Services
                 groupLists.Add(new M3UGroupList(m3uString));
             }
         }
-        public void RemoveGroupList(M3UGroupList model) => groupLists.Remove(model);
+        public void RemoveGroupList(int modelId) => groupLists.Remove(GetModel(modelId));
         public M3UGroupList GetModel(int index) => groupLists[index];
-        public int GroupListsCount() => groupLists.Count;
+        public int GroupListsCount() => groupLists.Count();
         public void CompareGroupLists()
         {
             var dict1Keys = GetModel(0).M3UGroups.Keys;
@@ -26,10 +26,18 @@ namespace M3UManager.Services
 
             inBothLists = dict1Keys.Where(x => dict2Keys.Contains(x)).ToArray();
         }
-        public void DeleteGroupsFromList(M3UGroupList model)
+        public void DeleteGroupsFromList(int modelId)
         {
             if (SelectedGroups.Length > 0)
-                model.RemoveGroups(SelectedGroups);
+                GetModel(modelId).RemoveGroups(SelectedGroups);
+        }
+        public void DeleteChannelsFromGroups(int modelId, List<M3UChannel> channels)
+        {
+            foreach (var group in SelectedGroups)
+            {
+                var g = GetModel(modelId).GetGroup(group);
+                g.Channels = g.Channels.Where(c => !channels.Contains(c)).ToList();
+            }
         }
         public void AddGroupsToList(M3UGroupList model, M3UGroupList sourceModel)
         {

@@ -16,6 +16,7 @@ namespace M3UManager.Models
                     .ToDictionary(group => Utils.TrimmedString(group.Key), group => new M3UGroup(group.Key, group));
         }
 
+        public M3UGroup GetGroup(string groupName) => M3UGroups[groupName];
         public void AddGroup(M3UGroup group)
         {
             if (M3UGroups.ContainsKey(group.Name))
