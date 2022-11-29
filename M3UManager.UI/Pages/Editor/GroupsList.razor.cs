@@ -36,7 +36,7 @@ namespace M3UManager.UI.Pages.Editor
         }
         void DeleteGroups()
         {
-            m3UService.DeleteGroupsFromList(M3UListModelId);
+            m3UService.DeleteGroupsFromList(M3UListModelId, m3UService.SelectedGroups);
             FilterGroups(new ChangeEventArgs() { Value = groupFilterString });
             StateHasChanged();
         }

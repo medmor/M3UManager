@@ -1,5 +1,4 @@
-﻿using M3UManager.Models;
-using M3UManager.Services.ServicesContracts;
+﻿using M3UManager.Services.ServicesContracts;
 using Microsoft.AspNetCore.Components;
 
 namespace M3UManager.UI.Pages.Editor
@@ -9,6 +8,7 @@ namespace M3UManager.UI.Pages.Editor
 
         [Inject] IM3UService m3uService { get; set; }
         [Inject] IFileIOService fileIO { get; set; }
+        public List<Models.Commands.Command> Commands { get; set; } = new List<Models.Commands.Command>();
 
         protected override void OnInitialized()
         {
@@ -20,15 +20,21 @@ namespace M3UManager.UI.Pages.Editor
             var textFile = await fileIO.OpenM3U();
             if (!string.IsNullOrEmpty(textFile))
             {
-                m3uService.AddGroupList(textFile);
+                var cmd = new Services.M3UEditorCommands.AddModelCommand(m3uService, m3uService.GroupListsCount(), textFile);
+                cmd.Execute();
+                Commands.Add(cmd);
             }
         }
 
-        bool isOdd(int num) => !(num % 2 == 0);
+        public void Undo()
+        {
+            Commands[Commands.Count - 1].Undo();
+            Commands.RemoveAt(Commands.Count - 1);
+        }
         void CompareLists()
         {
             m3uService.CompareGroupLists();
         }
-        void CopyToOther(M3UGroupList model, M3UGroupList sourceModel) => m3uService.AddGroupsToList(model, sourceModel);
+        void CopyToOther(int modelId, int sourceModelId) => m3uService.AddGroupsToList(modelId, sourceModelId, m3uService.SelectedGroups);
     }
 }

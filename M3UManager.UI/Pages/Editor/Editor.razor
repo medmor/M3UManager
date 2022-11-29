@@ -1,6 +1,10 @@
 ﻿@page "/editor"
 
 <div class="btn-group d-flex mb-1">
+    @if (Commands.Count() > 0)
+    {
+        <button class="btn btn-outline-dark" @onclick="Undo" title="open new list"><i class="bi bi-arrow-counterclockwise"></i></button>
+    }
     @if (m3uService.GroupListsCount() < 2)
     {
         <button class="btn btn-outline-primary" @onclick="OpenFile" title="open new list"><i class="bi bi-file-plus"></i></button>
@@ -10,10 +14,10 @@
         <button class="btn btn-outline-primary" @onclick="(()=>CompareLists())" title="compare lists">
             <i class="bi bi-signpost-split"></i>
         </button>
-        <button class="btn btn-outline-primary " @onclick="(()=>CopyToOther(m3uService.GetModel(0), m3uService.GetModel(1)))" title="move channels left">
+        <button class="btn btn-outline-primary " @onclick="(()=>CopyToOther(0, 1))" title="move channels left">
             <i class="bi bi-arrow-left-square"></i>
         </button>
-        <button class="btn btn-outline-primary" @onclick="(()=>CopyToOther(m3uService.GetModel(1), m3uService.GetModel(0)))" title="move channels right">
+        <button class="btn btn-outline-primary" @onclick="(()=>CopyToOther(1, 0))" title="move channels right">
             <i class="bi bi-arrow-right-square"></i>
         </button>
     }

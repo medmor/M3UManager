@@ -17,6 +17,11 @@ namespace M3UManager.Models
         }
 
         public M3UGroup GetGroup(string groupName) => M3UGroups[groupName];
+        public string GetM3UString()
+        {
+            var list = M3UGroups.Values.SelectMany(d => d.Channels).ToArray();
+            return string.Join(separator, list.Select(c => c.FullChannelString));
+        }
         public void AddGroup(M3UGroup group)
         {
             if (M3UGroups.ContainsKey(group.Name))

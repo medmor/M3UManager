@@ -9,6 +9,8 @@ namespace M3UManager.Services
         private readonly List<M3UGroupList> groupLists = new List<M3UGroupList>();
         private string[] inBothLists = new string[0];
 
+        public M3UGroupList GetModel(int index) => groupLists[index];
+        public string GetM3UString(int index) => GetModel(index).GetM3UString();
         public void AddGroupList(string m3uString)
         {
             if (groupLists.Count < 2)
@@ -17,7 +19,6 @@ namespace M3UManager.Services
             }
         }
         public void RemoveGroupList(int modelId) => groupLists.Remove(GetModel(modelId));
-        public M3UGroupList GetModel(int index) => groupLists[index];
         public int GroupListsCount() => groupLists.Count();
         public void CompareGroupLists()
         {
@@ -26,9 +27,9 @@ namespace M3UManager.Services
 
             inBothLists = dict1Keys.Where(x => dict2Keys.Contains(x)).ToArray();
         }
-        public void DeleteGroupsFromList(int modelId)
+        public void DeleteGroupsFromList(int modelId, string[] selected)
         {
-            if (SelectedGroups.Length > 0)
+            if (selected.Length > 0)
                 GetModel(modelId).RemoveGroups(SelectedGroups);
         }
         public void DeleteChannelsFromGroups(int modelId, List<M3UChannel> channels)
@@ -39,13 +40,13 @@ namespace M3UManager.Services
                 g.Channels = g.Channels.Where(c => !channels.Contains(c)).ToList();
             }
         }
-        public void AddGroupsToList(M3UGroupList model, M3UGroupList sourceModel)
+        public void AddGroupsToList(int modelId, int sourceModelId, string[] selected)
         {
-            var list = sourceModel.M3UGroups
-                .Where(x => SelectedGroups.Contains(x.Key))
+            var list = GetModel(sourceModelId).M3UGroups
+                .Where(x => selected.Contains(x.Key))
                 .Select(x => x.Value)
                 .ToArray();
-            model.AddGroups(list);
+            GetModel(modelId).AddGroups(list);
         }
         public bool IsInBothLists(string channelTrimmedName) => groupLists.Count > 1 && inBothLists.Contains(channelTrimmedName);
 
