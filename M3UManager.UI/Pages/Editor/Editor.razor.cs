@@ -30,11 +30,13 @@ namespace M3UManager.UI.Pages.Editor
         {
             Commands[Commands.Count - 1].Undo();
             Commands.RemoveAt(Commands.Count - 1);
+            StateHasChanged();
         }
         void CompareLists()
         {
             m3uService.CompareGroupLists();
         }
-        void CopyToOther(int modelId, int sourceModelId) => m3uService.AddGroupsToList(modelId, sourceModelId, m3uService.SelectedGroups);
+        void CopyToOther(int modelId, int sourceModelId)
+            => m3uService.AddGroupsToList(modelId, m3uService.GetGroupsFromModel(sourceModelId, m3uService.SelectedGroups));
     }
 }

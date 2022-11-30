@@ -20,14 +20,13 @@ namespace M3UManager.UI.Pages.Editor
         M3UChannel? selectedChannel { get; set; }
         int channelsToShow = 200;
 
-        public async Task OnGroupChanged(List<M3UChannel> c)
+        public void OnGroupChanged(List<M3UChannel> c)
         {
             Channels = c;
             channelsToShow = c.Count > 200 ? 200 : c.Count - 1;
             selectedChannel = null;
             selectedChannels = null;
             StateHasChanged();
-            await JS.InvokeVoidAsync("ChannelList.deselectItems");
         }
         void OnSelectchannelsInput(ChangeEventArgs args)
         {
@@ -65,9 +64,12 @@ namespace M3UManager.UI.Pages.Editor
         }
         async Task CreateIndicators(string[] ids) => await JS.InvokeVoidAsync("ChannelList.addIndicators", ids);
         bool FilterButtonDisabled() => filtredChannels.Count() == 0;
-        void RemoveChannels()
+        async Task RemoveChannels()
         {
-            m3UService.DeleteChannelsFromGroups(M3UListModelId, selectedChannels);
+            var cmd = new Services.M3UEditorCommands.DeleteChannelsFromGroupsCommand(m3UService, M3UListModelId, selectedChannels, m3UService.SelectedGroups);
+            cmd.Execute();
+            editor.Commands.Add(cmd);
+            await JS.InvokeVoidAsync("ChannelList.deselectItems");
             OnGroupChanged(Channels.Where(c => !selectedChannels.Contains(c)).ToList());
         }
         void PlayOnVlc() => fileIOService.OpenWithVlc(selectedChannel.Url);

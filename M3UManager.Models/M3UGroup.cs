@@ -23,13 +23,13 @@
             if (Channels.Contains(channel)) return;
             Channels.Add(channel);
         }
-        public void AddMultipleChannels(List<M3UChannel> channels) => Channels.AddRange(channels);
+        public void AddChannels(List<M3UChannel> channels) => Channels.AddRange(channels);
         public void RemoveChannel(M3UChannel channel) => Channels.Remove(channel);
         public void RemoveChannel(string fullChannelString)
         {
             Channels = Channels.Where(c => c.FullChannelString != fullChannelString).ToList();
         }
-        public void RemoveMultipleChannels(List<string> channelsNames)
+        public void RemoveChannels(List<string> channelsNames)
         {
             Channels = Channels.Where(c => !channelsNames.Contains(c.Name)).ToList();
         }

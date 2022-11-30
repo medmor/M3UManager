@@ -17,7 +17,7 @@ namespace M3UManager.Services.M3UEditorCommands
 
         public override void Execute()
         {
-            M3UService.AddGroupsToList(modelId, sourceModelId, selected);
+            M3UService.AddGroupsToList(modelId, M3UService.GetGroupsFromModel(sourceModelId, selected));
         }
 
         public override void Undo()

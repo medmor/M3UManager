@@ -6,7 +6,6 @@ namespace M3UManager.Services.M3UEditorCommands
     {
         private int modelId { get; set; }
         private string m3uString { get; set; }
-        private M3UService M3UService { get; set; }
 
 
         public RemoveModelCommand(IM3UService m3UService, int modelId)

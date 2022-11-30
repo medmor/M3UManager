@@ -27,22 +27,27 @@ namespace M3UManager.UI.Pages.Editor
             try
             {
                 fileIO.SaveDictionaryAsM3U(m3UService.GetModel(M3UListModelId).M3UGroups);
-                js.InvokeVoidAsync("Alert", "Save succeeded");
+                js.InvokeVoidAsync("alert", "Save succeeded");
             }
             catch
             {
-                js.InvokeVoidAsync("Alert", "Save failed");
+                js.InvokeVoidAsync("alert", "Save failed");
             }
         }
-        void DeleteGroups()
+        async Task DeleteGroups()
         {
-            m3UService.DeleteGroupsFromList(M3UListModelId, m3UService.SelectedGroups);
+            var cmd = new Services.M3UEditorCommands.DeleteGroupsFromListCommand(m3UService, M3UListModelId, m3UService.SelectedGroups);
+            cmd.Execute();
+            editor.Commands.Add(cmd);
             FilterGroups(new ChangeEventArgs() { Value = groupFilterString });
+            await js.InvokeVoidAsync("ChannelList.deselectItems");
             StateHasChanged();
         }
         void RemoveModel()
         {
-            m3UService.RemoveGroupList(M3UListModelId);
+            var cmd = new Services.M3UEditorCommands.RemoveModelCommand(m3UService, M3UListModelId);
+            cmd.Execute();
+            editor.Commands.Add(cmd);
             editor.Refresh();
         }
         void OnSelectGroupsInput(ChangeEventArgs args)
@@ -69,6 +74,6 @@ namespace M3UManager.UI.Pages.Editor
             }
         }
 
-        bool IsInBoothLists(string gTrimmedName) => m3UService.IsInBothLists(gTrimmedName);
+        bool IsInBoothLists(string gTrimmedName) => m3UService.IsChannelInBothLists(gTrimmedName);
     }
 }

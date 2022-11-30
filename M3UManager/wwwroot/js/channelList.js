@@ -30,7 +30,10 @@
     },
 
     deselectItems() {
-        document.getElementById("channels-container").selectedIndex = -1;
+        document.querySelectorAll('select')
+            .forEach((select) => {
+                select.selectedIndex = -1;
+            });
     }
 }
 window.onload = () => {
