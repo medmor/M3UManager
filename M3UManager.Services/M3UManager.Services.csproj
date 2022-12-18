@@ -18,6 +18,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Platforms\**" />
+	  <EmbeddedResource Remove="Platforms\**" />
+	  <MauiCss Remove="Platforms\**" />
+	  <MauiXaml Remove="Platforms\**" />
+	  <None Remove="Platforms\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
 

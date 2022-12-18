@@ -2,14 +2,15 @@
 
 namespace M3UManager.Services.M3UEditorCommands
 {
-    public class AddModelCommand : M3UEditorCommandBase
+    internal class AddModelCommand : Models.Commands.Command
     {
+        private readonly IM3UService M3UService;
         private int modelId;
         private string m3uString;
 
         public AddModelCommand(IM3UService m, int modelId, string m3uString)
-            : base(m)
         {
+            M3UService = m;
             this.modelId = modelId;
             this.m3uString = m3uString;
 

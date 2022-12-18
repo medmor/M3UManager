@@ -2,14 +2,15 @@
 
 namespace M3UManager.Services.M3UEditorCommands
 {
-    public class AddGroupsToListCommand : M3UEditorCommandBase
+    internal class AddGroupsToListCommand : Models.Commands.Command
     {
+        private readonly IM3UService M3UService;
         private int modelId;
         private int sourceModelId;
         private string[] selected;
         public AddGroupsToListCommand(IM3UService m, int modelId, int sourceModelId, string[] selected)
-            : base(m)
         {
+            M3UService = m;
             this.modelId = modelId;
             this.sourceModelId = sourceModelId;
             this.selected = selected;

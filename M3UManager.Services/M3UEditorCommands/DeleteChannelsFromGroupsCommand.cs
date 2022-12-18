@@ -3,14 +3,15 @@ using M3UManager.Services.ServicesContracts;
 
 namespace M3UManager.Services.M3UEditorCommands
 {
-    public class DeleteChannelsFromGroupsCommand : M3UEditorCommandBase
+    internal class DeleteChannelsFromGroupsCommand : Models.Commands.Command
     {
+        private readonly IM3UService M3UService;
         private int modelId;
         private List<M3UChannel> channels;
         private string[] selectedGroups;
         public DeleteChannelsFromGroupsCommand(IM3UService m3UService, int id, List<M3UChannel> ch, string[] selectedGroups)
-            : base(m3UService)
         {
+            M3UService = m3UService;
             modelId = id;
             channels = ch;
             this.selectedGroups = selectedGroups;

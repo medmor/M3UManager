@@ -1,5 +1,5 @@
-﻿<div id="parent-row" class="row" style="height:calc(100vh - (100px));">
-    <div class="col-4 card" style="height:100%;">
+﻿<div id="parent-row" class="row px-1" style="height:calc(100vh - (100px));">
+    <div class="col-4 card p-0" style="height:100%;">
         <input class="form-control mb-1" placeholder="shearch group" @oninput="FilterGroups" />
         <div class="btn-group d-flex mb-1">
             <button class="btn btn-sm btn-outline-danger float-end" @onclick="RemoveModel" title="remove list"><i class="bi bi-x-circle"></i></button>
@@ -19,7 +19,7 @@
             }
         </select>
     </div>
-    <div class="card col " style="height:100%">
+    <div class="card col p-0" style="height:100%">
         <ChannelsList @ref="channelsList" M3UListModelId="M3UListModelId"></ChannelsList>
     </div>
 </div>

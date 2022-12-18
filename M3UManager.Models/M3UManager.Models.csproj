@@ -17,4 +17,12 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <Compile Remove="Platforms\**" />
+	  <EmbeddedResource Remove="Platforms\**" />
+	  <MauiCss Remove="Platforms\**" />
+	  <MauiXaml Remove="Platforms\**" />
+	  <None Remove="Platforms\**" />
+	</ItemGroup>
+
 </Project>

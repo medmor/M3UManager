@@ -2,15 +2,16 @@
 
 namespace M3UManager.Services.M3UEditorCommands
 {
-    public class RemoveModelCommand : M3UEditorCommandBase
+    internal class RemoveModelCommand : Models.Commands.Command
     {
+        private readonly IM3UService M3UService;
         private int modelId { get; set; }
         private string m3uString { get; set; }
 
 
         public RemoveModelCommand(IM3UService m3UService, int modelId)
-            : base(m3UService)
         {
+            M3UService = m3UService;
             this.modelId = modelId;
         }
 
