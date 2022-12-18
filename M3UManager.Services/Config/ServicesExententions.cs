@@ -1,4 +1,6 @@
 ﻿//using M3UEditor.Data;
+using M3UManager.Models.Commands;
+using M3UManager.Services.M3UEditorCommands;
 using M3UManager.Services.ServicesContracts;
 
 namespace M3UManager.Services.Config
@@ -9,8 +11,9 @@ namespace M3UManager.Services.Config
         {
             //services.AddDbContext<AppDbContext>();
             services.AddSingleton<IFavoritesService, FavoritesService>();
-            services.AddSingleton<EditorService, EditorService>();
-            services.AddSingleton<IFileIOService, FileIO>();
+            services.AddSingleton<IEditorService, EditorService>();
+            services.AddSingleton<ICommandFactory, M3UEditorCommandsFactory>();
+            services.AddTransient<IFileIOService, FileIO>();
         }
     }
 }

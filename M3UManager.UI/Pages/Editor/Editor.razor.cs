@@ -9,8 +9,7 @@ namespace M3UManager.UI.Pages.Editor
 
         [Inject] IEditorService m3uService { get; set; }
         [Inject] ICommandFactory m3uCommandFactory { get; set; }
-        [Inject] IFileIOService fileIO { get; set; }
-        public List<Models.Commands.Command> Commands { get; set; } = new List<Models.Commands.Command>();
+        public List<Command> Commands { get; set; } = new List<Command>();
 
         protected override void OnInitialized()
         {
@@ -19,13 +18,9 @@ namespace M3UManager.UI.Pages.Editor
         public void Refresh() => StateHasChanged();
         async Task OpenFile()
         {
-            var textFile = await fileIO.OpenM3U();
-            if (!string.IsNullOrEmpty(textFile))
-            {
-                var cmd = m3uCommandFactory.GetCommand(CommandName.AddGroupsList);
-                cmd.Execute();
-                Commands.Add(cmd);
-            }
+            var cmd = m3uCommandFactory.GetCommand(CommandName.AddGroupsList);
+            await cmd.Execute();
+            Commands.Add(cmd);
         }
 
         public void Undo()

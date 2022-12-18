@@ -16,7 +16,7 @@ namespace M3UManager.Services.M3UEditorCommands
             selected = m.GetSelectedGroups();
         }
 
-        public override void Execute()
+        public override Task Execute()
         {
             var groupsList = M3UService.GetGroupsList(groupsListId);
             var sourceGroupsList = M3UService.GetGroupsList(sourceModelId);
@@ -27,6 +27,7 @@ namespace M3UManager.Services.M3UEditorCommands
                 .ToArray();
 
             groupsList.AddGroups(groups);
+            return Task.CompletedTask;
         }
 
         public override void Undo()

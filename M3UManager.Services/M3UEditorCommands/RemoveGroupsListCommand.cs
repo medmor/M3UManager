@@ -15,10 +15,11 @@ namespace M3UManager.Services.M3UEditorCommands
             groupsListId = M3UService.GetActiveGroupsList();
         }
 
-        public override void Execute()
+        public override Task Execute()
         {
             m3uString = M3UService.GetGroupsList(groupsListId).GetM3UString();
             M3UService.RemoveGroupsList(groupsListId);
+            return Task.CompletedTask;
         }
 
         public override void Undo()

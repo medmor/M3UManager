@@ -1,14 +1,17 @@
 ﻿using M3UManager.Models.Commands;
+using M3UManager.Services.ServicesContracts;
 
 namespace M3UManager.Services.M3UEditorCommands
 {
     public class M3UEditorCommandsFactory : ICommandFactory
     {
-        private readonly ServicesContracts.IEditorService M3UService;
+        private readonly IEditorService m3UService;
+        private readonly IFileIOService fileIOService;
 
-        public M3UEditorCommandsFactory(ServicesContracts.IEditorService M3UService)
+        public M3UEditorCommandsFactory(IEditorService M3UService, IFileIOService file)
         {
-            this.M3UService = M3UService;
+            m3UService = M3UService;
+            fileIOService = file;
         }
 
         public Models.Commands.Command GetCommand(CommandName command)
@@ -16,15 +19,15 @@ namespace M3UManager.Services.M3UEditorCommands
             switch (command)
             {
                 case CommandName.AddGroupsToList:
-                    return new AddGroupsToListCommand(M3UService);
+                    return new AddGroupsToListCommand(m3UService);
                 case CommandName.RemoveGroupsList:
-                    return new RemoveGroupsListCommand(M3UService);
+                    return new RemoveGroupsListCommand(m3UService);
                 case CommandName.AddGroupsList:
-                    return new AddGroupsListCommand(M3UService);
+                    return new AddGroupsListCommand(m3UService, fileIOService);
                 case CommandName.RemoveGroupsFromList:
-                    return new RemoveGroupsFromListCommand(M3UService);
+                    return new RemoveGroupsFromListCommand(m3UService);
                 case CommandName.RemoveChannelsFromGroups:
-                    return new RemoveChannelsFromGroupsCommand(M3UService);
+                    return new RemoveChannelsFromGroupsCommand(m3UService);
                 //case CommandName.AddChannelsToGroups:
                 //    return new Add
                 default: return null;

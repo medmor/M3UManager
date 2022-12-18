@@ -2,7 +2,7 @@
 {
     public abstract class Command
     {
-        public abstract void Execute();
+        public abstract Task Execute();
         public abstract void Undo();
     }
 }

@@ -17,7 +17,7 @@ namespace M3UManager.Services.M3UEditorCommands
             selectedGroups = m3UService.GetSelectedGroups();
         }
 
-        public override void Execute()
+        public override Task Execute()
         {
             var groupList = M3UService.GetGroupsList(groupsListId);
             foreach (var group in selectedGroups)
@@ -25,6 +25,7 @@ namespace M3UManager.Services.M3UEditorCommands
                 var g = groupList.GetGroup(group);
                 g.RemoveChannels(channels.Select(c => c.Name).ToList());
             }
+            return Task.CompletedTask;
         }
 
         public override void Undo()

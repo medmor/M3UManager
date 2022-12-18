@@ -5,7 +5,7 @@
     {
         <button class="btn btn-outline-dark" @onclick="Undo" title="open new list"><i class="bi bi-arrow-counterclockwise"></i></button>
     }
-    @if (m3uService.GetGroupsList(0) != null || m3uService.GetGroupsList(1) != null)
+    @if (m3uService.GetGroupsList(0) == null || m3uService.GetGroupsList(1) == null)
     {
         <button class="btn btn-outline-primary" @onclick="OpenFile" title="open new list"><i class="bi bi-file-plus"></i></button>
     }
@@ -26,14 +26,14 @@
     <CascadingValue Value="this">
         @if (m3uService.GetGroupsList(0) != null || m3uService.GetGroupsList(1) != null)
         {
-            <div class="col">
+            <div class="col" @onclick="()=>m3uService.SetActiveGroupsList(0)">
                 <GroupsList M3UListModelId="0"></GroupsList>
             </div>
         }
         @if (m3uService.GetGroupsList(0) != null && m3uService.GetGroupsList(1) != null)
         {
 
-            <div class="card col">
+            <div class="card col" @onclick="()=>m3uService.SetActiveGroupsList(1)">
                 <GroupsList M3UListModelId="1"></GroupsList>
             </div>
         }

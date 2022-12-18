@@ -13,13 +13,13 @@ namespace M3UManager.Services
 
         public void AddGroupsList(M3UGroupsList group)
         {
-            if (groupsLists[1] == null)
+            if (groupsLists[0] == null)
             {
-                groupsLists[1] = group;
+                groupsLists[0] = group;
             }
             else
             {
-                groupsLists[2] = group;
+                groupsLists[1] = group;
             }
         }
 
@@ -73,6 +73,8 @@ namespace M3UManager.Services
 
         public bool IsGroupCommon(string channel)
         {
+            if (commonGroups == null)
+                return false;
             return commonGroups.Contains(channel);
         }
 
