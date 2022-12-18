@@ -1,18 +1,13 @@
-﻿using System.Text.RegularExpressions;
-
-namespace M3UManager.Models
+﻿namespace M3UManager.Models
 {
-    public class M3UGroupList
+    public class M3UGroupsList
     {
-        private readonly string separator = "#EXTINF:";
-        private readonly Regex regex = new Regex("group-title=\"(.*)\"");
-
         public Dictionary<string, M3UGroup> M3UGroups { get; set; }
-        public M3UGroupList() { }
-        public M3UGroupList(string m3uListString)
+        public M3UGroupsList() { }
+        public M3UGroupsList(string m3uListString)
         {
-            var lines = m3uListString.Split(separator);
-            M3UGroups = lines.GroupBy(l => regex.Match(l).Groups[1].Value)
+            var lines = m3uListString.Split(Utils.Separator);
+            M3UGroups = lines.GroupBy(l => Utils.RegexGroupTitle.Match(l).Groups[1].Value)
                     .ToDictionary(group => Utils.TrimmedString(group.Key), group => new M3UGroup(group.Key, group));
         }
 
@@ -20,7 +15,7 @@ namespace M3UManager.Models
         public string GetM3UString()
         {
             var list = M3UGroups.Values.SelectMany(d => d.Channels).ToArray();
-            return string.Join(separator, list.Select(c => c.FullChannelString));
+            return string.Join(Utils.Separator, list.Select(c => c.FullChannelString));
         }
         public void AddGroup(M3UGroup group)
         {

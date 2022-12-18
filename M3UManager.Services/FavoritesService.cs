@@ -8,7 +8,7 @@ namespace M3UManager.Services
     {
         public IFileIOService fileIOService { get; private set; }
         public string[] SelectedGroups { get; set; } = new string[0];
-        public M3UGroupList FavoritesGroupList { get; private set; }
+        public M3UGroupsList FavoritesGroupList { get; private set; }
         private bool initialzed = false;
         private string favoritePath = FileSystem.AppDataDirectory + "/favorites.json";
         public FavoritesService(IFileIOService fileIOService)
@@ -22,12 +22,12 @@ namespace M3UManager.Services
                 try
                 {
                     var favoriesStringList = File.ReadAllText(favoritePath);
-                    FavoritesGroupList = new M3UGroupList(favoriesStringList);
+                    FavoritesGroupList = new M3UGroupsList(favoriesStringList);
                     initialzed = true;
                 }
                 catch
                 {
-                    FavoritesGroupList = new M3UGroupList { M3UGroups = new Dictionary<string, M3UGroup>() };
+                    FavoritesGroupList = new M3UGroupsList { M3UGroups = new Dictionary<string, M3UGroup>() };
                 }
             }
         }

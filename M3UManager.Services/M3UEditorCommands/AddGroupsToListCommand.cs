@@ -4,26 +4,35 @@ namespace M3UManager.Services.M3UEditorCommands
 {
     internal class AddGroupsToListCommand : Models.Commands.Command
     {
-        private readonly IM3UService M3UService;
-        private int modelId;
+        private readonly IEditorService M3UService;
+        private int groupsListId;
         private int sourceModelId;
         private string[] selected;
-        public AddGroupsToListCommand(IM3UService m, int modelId, int sourceModelId, string[] selected)
+        public AddGroupsToListCommand(IEditorService m)
         {
             M3UService = m;
-            this.modelId = modelId;
-            this.sourceModelId = sourceModelId;
-            this.selected = selected;
+            groupsListId = m.GetActiveGroupsList();
+            sourceModelId = groupsListId == 0 ? 1 : 0;
+            selected = m.GetSelectedGroups();
         }
 
         public override void Execute()
         {
-            M3UService.AddGroupsToList(modelId, M3UService.GetGroupsFromModel(sourceModelId, selected));
+            var groupsList = M3UService.GetGroupsList(groupsListId);
+            var sourceGroupsList = M3UService.GetGroupsList(sourceModelId);
+
+            var groups = sourceGroupsList.M3UGroups
+                .Where(x => selected.Contains(x.Key))
+                .Select(x => x.Value)
+                .ToArray();
+
+            groupsList.AddGroups(groups);
         }
 
         public override void Undo()
         {
-            M3UService.DeleteGroupsFromList(modelId, selected);
+            var groupsList = M3UService.GetGroupsList(groupsListId);
+            groupsList.RemoveGroups(selected);
         }
     }
 }

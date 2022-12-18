@@ -9,7 +9,7 @@ namespace M3UManager.Services.Config
         {
             //services.AddDbContext<AppDbContext>();
             services.AddSingleton<IFavoritesService, FavoritesService>();
-            services.AddSingleton<IM3UService, M3UService>();
+            services.AddSingleton<EditorService, EditorService>();
             services.AddSingleton<IFileIOService, FileIO>();
         }
     }

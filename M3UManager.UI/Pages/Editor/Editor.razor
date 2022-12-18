@@ -5,11 +5,11 @@
     {
         <button class="btn btn-outline-dark" @onclick="Undo" title="open new list"><i class="bi bi-arrow-counterclockwise"></i></button>
     }
-    @if (m3uService.GroupListsCount() < 2)
+    @if (m3uService.GetGroupsList(0) != null || m3uService.GetGroupsList(1) != null)
     {
         <button class="btn btn-outline-primary" @onclick="OpenFile" title="open new list"><i class="bi bi-file-plus"></i></button>
     }
-    @if (m3uService.GroupListsCount() == 2)
+    @if (m3uService.GetGroupsList(0) != null && m3uService.GetGroupsList(1) != null)
     {
         <button class="btn btn-outline-primary" @onclick="(()=>CompareLists())" title="compare lists">
             <i class="bi bi-signpost-split"></i>
@@ -24,13 +24,13 @@
 </div>
 <div class="row">
     <CascadingValue Value="this">
-        @if (m3uService.GroupListsCount() > 0)
+        @if (m3uService.GetGroupsList(0) != null || m3uService.GetGroupsList(1) != null)
         {
             <div class="col">
                 <GroupsList M3UListModelId="0"></GroupsList>
             </div>
         }
-        @if (m3uService.GroupListsCount() == 2)
+        @if (m3uService.GetGroupsList(0) != null && m3uService.GetGroupsList(1) != null)
         {
 
             <div class="card col">

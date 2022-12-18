@@ -2,6 +2,15 @@
 {
     public interface ICommandFactory
     {
-        Command GetCommand(int command);
+        Command GetCommand(CommandName command);
+    }
+    public enum CommandName
+    {
+        AddGroupsList,
+        RemoveGroupsList,
+        AddGroupsToList,
+        RemoveGroupsFromList,
+        AddChannelsToGroups,
+        RemoveChannelsFromGroups
     }
 }

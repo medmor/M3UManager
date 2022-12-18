@@ -7,7 +7,7 @@ namespace M3UManager.Services.ServicesContracts
         IFileIOService fileIOService { get; }
         string[] SelectedGroups { get; set; }
 
-        M3UGroupList FavoritesGroupList { get; }
+        M3UGroupsList FavoritesGroupList { get; }
         void InitFavorites();
         void SaveFavoritesListString();
         bool IsChannelInFavorites(M3UChannel channel);

@@ -1,33 +1,34 @@
 ﻿using M3UManager.Models.Commands;
-using M3UManager.Services.ServicesContracts;
 
 namespace M3UManager.Services.M3UEditorCommands
 {
     public class M3UEditorCommandsFactory : ICommandFactory
     {
-        private readonly IM3UService M3UService;
+        private readonly ServicesContracts.IEditorService M3UService;
 
-        public M3UEditorCommandsFactory(IM3UService M3UService)
+        public M3UEditorCommandsFactory(ServicesContracts.IEditorService M3UService)
         {
             this.M3UService = M3UService;
         }
 
-        public Models.Commands.Command GetCommand(int command)
+        public Models.Commands.Command GetCommand(CommandName command)
         {
             switch (command)
             {
-                case (int)CommandName.AddGroupToList:
+                case CommandName.AddGroupsToList:
                     return new AddGroupsToListCommand(M3UService);
+                case CommandName.RemoveGroupsList:
+                    return new RemoveGroupsListCommand(M3UService);
+                case CommandName.AddGroupsList:
+                    return new AddGroupsListCommand(M3UService);
+                case CommandName.RemoveGroupsFromList:
+                    return new RemoveGroupsFromListCommand(M3UService);
+                case CommandName.RemoveChannelsFromGroups:
+                    return new RemoveChannelsFromGroupsCommand(M3UService);
+                //case CommandName.AddChannelsToGroups:
+                //    return new Add
+                default: return null;
             }
-        }
-
-        public enum CommandName
-        {
-            AddGroupToList,
-            AddModel,
-            DeleteChannelsFromGroups,
-            DeleteGroupsFromList,
-            RemveModel
         }
     }
 }

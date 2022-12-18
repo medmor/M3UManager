@@ -1,4 +1,5 @@
 ﻿using M3UManager.Models;
+using M3UManager.Models.Commands;
 using M3UManager.Services.ServicesContracts;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -8,7 +9,8 @@ namespace M3UManager.UI.Pages.Editor
     public partial class ChannelsList
     {
         [Inject] IJSRuntime JS { get; set; }
-        [Inject] IM3UService m3UService { get; set; }
+        [Inject] IEditorService editorService { get; set; }
+        [Inject] ICommandFactory commandFactory { get; set; }
         [Inject] IFileIOService fileIOService { get; set; }
         [Inject] IFavoritesService favoritesService { get; set; }
         [Parameter] public int M3UListModelId { get; set; }
@@ -66,7 +68,7 @@ namespace M3UManager.UI.Pages.Editor
         bool FilterButtonDisabled() => filtredChannels.Count() == 0;
         async Task RemoveChannels()
         {
-            var cmd = new Services.M3UEditorCommands.DeleteChannelsFromGroupsCommand(m3UService, M3UListModelId, selectedChannels, m3UService.SelectedGroups);
+            var cmd = commandFactory.GetCommand(CommandName.RemoveChannelsFromGroups);
             cmd.Execute();
             editor.Commands.Add(cmd);
             await JS.InvokeVoidAsync("ChannelList.deselectItems");
