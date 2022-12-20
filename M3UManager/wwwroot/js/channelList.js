@@ -30,7 +30,7 @@
     },
 
     deselectItems() {
-        document.querySelectorAll('select')
+        document.querySelectorAll('.select-channels')
             .forEach((select) => {
                 select.selectedIndex = -1;
             });

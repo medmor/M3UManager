@@ -18,30 +18,32 @@ namespace M3UManager.UI.Pages.Editor
         List<M3UChannel>? Channels { get; set; }
         List<M3UChannel> filtredChannels { get; set; } = new List<M3UChannel>();
         int filtredChannelsIndex { get; set; } = 0;
-        List<M3UChannel> selectedChannels { get; set; }
+        List<M3UChannel>? selectedChannels { get; set; }
         M3UChannel? selectedChannel { get; set; }
         int channelsToShow = 200;
 
-        public void OnGroupChanged(List<M3UChannel> c)
+        public async Task OnGroupChanged(List<M3UChannel> c)
         {
             Channels = c;
             channelsToShow = c.Count > 200 ? 200 : c.Count - 1;
             selectedChannel = null;
             selectedChannels = null;
+            await JS.InvokeVoidAsync("ChannelList.deselectItems");
             StateHasChanged();
         }
         void OnSelectchannelsInput(ChangeEventArgs args)
         {
-            var selected = (string[])args.Value;
-            selectedChannels = Channels.Where(c => selected.Any(cc => cc == c.Name)).ToList();
+            var selected = (string[])args.Value!;
+            selectedChannels = Channels!.Where(c => selected.Any(cc => cc == c.Name)).ToList();
             selectedChannel = selectedChannels[0];
+            editorService.SetSelectedChannels(selectedChannels);
         }
         async Task FilterChannels(ChangeEventArgs args)
         {
             filtredChannels.Clear();
             filtredChannelsIndex = 0;
 
-            string filter = (string)args.Value;
+            string filter = (string)args.Value!;
 
             if (!string.IsNullOrEmpty(filter))
                 filtredChannels = Channels!
@@ -69,12 +71,12 @@ namespace M3UManager.UI.Pages.Editor
         async Task RemoveChannels()
         {
             var cmd = commandFactory.GetCommand(CommandName.RemoveChannelsFromGroups);
-            cmd.Execute();
+            await cmd.Execute();
             editor.Commands.Add(cmd);
             await JS.InvokeVoidAsync("ChannelList.deselectItems");
-            OnGroupChanged(Channels.Where(c => !selectedChannels.Contains(c)).ToList());
+            await OnGroupChanged(Channels!.Where(c => !selectedChannels.Contains(c)).ToList());
         }
-        void PlayOnVlc() => fileIOService.OpenWithVlc(selectedChannel.Url);
+        void PlayOnVlc() => fileIOService.OpenWithVlc(selectedChannel!.Url);
         bool IsChannelInFavorite() => favoritesService.IsChannelInFavorites(selectedChannel);
         void AddToFavorites() => favoritesService.AddChannelToFavory(selectedChannel);
         void RemoveFromFavorites() => favoritesService.RemoveChannelFromFavorites(selectedChannel);

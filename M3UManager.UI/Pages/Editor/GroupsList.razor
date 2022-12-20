@@ -1,12 +1,12 @@
 ﻿<div id="parent-row" class="row px-1" style="height:calc(100vh - (100px));">
     <div class="col-4 card p-0" style="height:100%;">
         <input class="form-control mb-1" placeholder="shearch group" @oninput="FilterGroups" />
-        <div class="btn-group d-flex mb-1">
-            <button class="btn btn-sm btn-outline-danger float-end" @onclick="RemoveModel" title="remove list"><i class="bi bi-x-circle"></i></button>
+        <div class="btn-group mb-1 d-block">
+            <button class="btn btn-sm btn-outline-danger" @onclick="RemoveModel" title="remove list"><i class="bi bi-x-circle"></i></button>
             <button class="btn btn-sm btn-outline-danger" @onclick="DeleteGroups"><i class="bi bi-trash" title="delete groups"></i></button>
             <button class="btn btn-sm btn-outline-primary" @onclick="SaveList"><i class="bi bi-save" title="save list"></i></button>
         </div>
-        <select style="width:100%;height:100%" @oninput="OnSelectGroupsInput" multiple>
+        <select style="width:100%;height:100%" class="select-groups" @oninput="OnSelectGroupsInput" multiple>
             @foreach (var group in filtredGroups)
             {
                 if (!string.IsNullOrEmpty(group.Value.TrimedName))
