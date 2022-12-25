@@ -1,5 +1,5 @@
 ﻿using M3UManager.Models;
-using M3UManager.Services.ServicesContracts;
+using M3UManager.Services.FavoriteServices;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 

@@ -1,8 +1,6 @@
-﻿using M3UManager.Models;
-using M3UManager.Services.ServicesContracts;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
-namespace M3UManager.Services
+namespace M3UManager.Services.FileIOServices
 {
     public class FileIO : IFileIOService
     {
@@ -32,7 +30,7 @@ namespace M3UManager.Services
         }
         public async Task<string> DownLoadM3U()
         {
-            var client = new System.Net.Http.HttpClient();
+            var client = new HttpClient();
             string requestString = @"http://grl.faststr.com/get.php?username=Talhikha1_397115&password=8gSEUCTI&type=m3u_plus&output=mpegts&token=XNi8bDMqGjYhj9iWLSioB1g0";
 
             var GetTask = client.GetAsync(requestString);
@@ -45,13 +43,13 @@ namespace M3UManager.Services
             return await GetTask.Result.Content.ReadAsStringAsync();
 
         }
-        public async Task SaveDictionaryAsM3U(Dictionary<string, M3UGroup> groups, string path = "C:\\Users\\enakr\\Downloads")
+        public async Task SaveM3U(string m3uListString, string path = "C:\\Users\\enakr\\Downloads")
         {
             if (!path.Contains(".json")) // for favorite save... to reformate later
                 path = Path.Combine(path, "channels.m3u");
-            var list = groups.Values.SelectMany(d => d.Channels).ToArray();
-            var text = string.Join(separator, list.Select(c => c.FullChannelString));
-            await File.WriteAllTextAsync(path, text);
+            //var list = groups.Values.SelectMany(d => d.Channels).ToArray();
+            //var text = string.Join(separator, list.Select(c => c.FullChannelString));
+            await File.WriteAllTextAsync(path, m3uListString);
         }
         public void OpenWithVlc(string channel)
         {

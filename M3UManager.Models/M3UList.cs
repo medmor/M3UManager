@@ -1,10 +1,10 @@
 ﻿namespace M3UManager.Models
 {
-    public class M3UGroupsList
+    public class M3UList
     {
         public Dictionary<string, M3UGroup> M3UGroups { get; set; }
-        public M3UGroupsList() { }
-        public M3UGroupsList(string m3uListString)
+        public M3UList() { }
+        public M3UList(string m3uListString)
         {
             var lines = m3uListString.Split(Utils.Separator);
             M3UGroups = lines.GroupBy(l => Utils.RegexGroupTitle.Match(l).Groups[1].Value)

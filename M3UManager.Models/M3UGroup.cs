@@ -20,18 +20,27 @@
         }
         public void AddChannel(M3UChannel channel)
         {
-            if (Channels.Contains(channel)) return;
+            if (Channels.Any(c => c.FullChannelString == channel.FullChannelString)) return;
             Channels.Add(channel);
         }
-        public void AddChannels(List<M3UChannel> channels) => Channels.AddRange(channels);
+        public void AddChannels(List<M3UChannel> channels)
+        {
+            foreach (var c in channels)
+            {
+                AddChannel(c);
+            }
+        }
         public void RemoveChannel(M3UChannel channel) => Channels.Remove(channel);
         public void RemoveChannel(string fullChannelString)
         {
             Channels = Channels.Where(c => c.FullChannelString != fullChannelString).ToList();
         }
-        public void RemoveChannels(List<string> channelsNames)
+        public void RemoveChannels(List<string> fullChannelsString)
         {
-            Channels = Channels.Where(c => !channelsNames.Contains(c.Name)).ToList();
+            foreach (var c in fullChannelsString)
+            {
+                RemoveChannel(c);
+            }
         }
 
 

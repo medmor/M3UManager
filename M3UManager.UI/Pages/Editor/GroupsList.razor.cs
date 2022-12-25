@@ -1,6 +1,7 @@
 ﻿using M3UManager.Models;
 using M3UManager.Models.Commands;
-using M3UManager.Services.ServicesContracts;
+using M3UManager.Services.FileIOServices;
+using M3UManager.Services.M3UListServices;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -28,7 +29,7 @@ namespace M3UManager.UI.Pages.Editor
         {
             try
             {
-                fileIO.SaveDictionaryAsM3U(m3UService.GetGroupsList(M3UListModelId).M3UGroups);
+                fileIO.SaveM3U(m3UService.GetGroupsList(M3UListModelId).GetM3UString());
                 js.InvokeVoidAsync("alert", "Save succeeded");
             }
             catch

@@ -1,17 +1,16 @@
 ﻿using M3UManager.Models;
-using M3UManager.Services.ServicesContracts;
 
-namespace M3UManager.Services
+namespace M3UManager.Services.M3UListServices
 {
     public class EditorService : IEditorService
     {
-        private M3UGroupsList[] groupsLists = new M3UGroupsList[2];
+        private M3UList[] groupsLists = new M3UList[2];
         private string[] selectedGroups;
         private List<M3UChannel> selectedChannels;
         private int activeGroupsList;
         private string[] commonGroups;
 
-        public void AddGroupsList(M3UGroupsList group)
+        public void AddGroupsList(M3UList group)
         {
             if (groupsLists[0] == null)
             {
@@ -28,7 +27,7 @@ namespace M3UManager.Services
             groupsLists[id] = null;
         }
 
-        public M3UGroupsList GetGroupsList(int id)
+        public M3UList GetGroupsList(int id)
         {
             return groupsLists[id];
         }

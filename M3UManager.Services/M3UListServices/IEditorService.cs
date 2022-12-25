@@ -1,12 +1,12 @@
 ﻿using M3UManager.Models;
 
-namespace M3UManager.Services.ServicesContracts
+namespace M3UManager.Services.M3UListServices
 {
     public interface IEditorService
     {
-        void AddGroupsList(M3UGroupsList group);
+        void AddGroupsList(M3UList group);
         void RemoveGroupsList(int id);
-        M3UGroupsList GetGroupsList(int id);
+        M3UList GetGroupsList(int id);
         string[] CompareGroupsLists();
         bool IsGroupCommon(string channel);
         string[] GetSelectedGroups();

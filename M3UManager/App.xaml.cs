@@ -1,4 +1,4 @@
-﻿using M3UManager.Services.ServicesContracts;
+﻿using M3UManager.Services.FavoriteServices;
 
 namespace M3UManager;
 

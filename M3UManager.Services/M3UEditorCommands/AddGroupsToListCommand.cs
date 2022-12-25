@@ -1,4 +1,4 @@
-﻿using M3UManager.Services.ServicesContracts;
+﻿using M3UManager.Services.M3UListServices;
 
 namespace M3UManager.Services.M3UEditorCommands
 {

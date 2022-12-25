@@ -1,4 +1,4 @@
-﻿using M3UManager.Services.ServicesContracts;
+﻿using M3UManager.Services.M3UListServices;
 
 namespace M3UManager.Services.M3UEditorCommands
 {
@@ -24,7 +24,7 @@ namespace M3UManager.Services.M3UEditorCommands
 
         public override void Undo()
         {
-            M3UService.AddGroupsList(new Models.M3UGroupsList(m3uString));
+            M3UService.AddGroupsList(new Models.M3UList(m3uString));
         }
     }
 }
