@@ -26,7 +26,7 @@
             </div>
         </div>
     </div>
-    <select id="channels-container" style="height:100%" @oninput="OnSelectchannelsInput" multiple>
+    <select id="channels-container" class="select-channels" style="height:100%" @oninput="OnSelectchannelsInput" multiple>
         @for (int i = 0; i < channelsToShow; i++)
         {
             var channel = Channels[i];

@@ -40,10 +40,10 @@ namespace M3UManager.UI.Pages.Editor
         async Task DeleteGroups()
         {
             var cmd = commandFactory.GetCommand(CommandName.RemoveGroupsFromList);
-            cmd.Execute();
+            await cmd.Execute();
             editor.Commands.Add(cmd);
             FilterGroups(new ChangeEventArgs() { Value = groupFilterString });
-            await js.InvokeVoidAsync("ChannelList.deselectItems");
+            await js.InvokeVoidAsync("deselectGroupsItems");
             StateHasChanged();
         }
         void RemoveModel()
@@ -53,7 +53,7 @@ namespace M3UManager.UI.Pages.Editor
             editor.Commands.Add(cmd);
             editor.Refresh();
         }
-        void OnSelectGroupsInput(ChangeEventArgs args)
+        async Task OnSelectGroupsInput(ChangeEventArgs args)
         {
             m3UService.SetSelectedGroups((string[])args.Value);
             List<M3UChannel> channels = new List<M3UChannel>();
@@ -61,7 +61,7 @@ namespace M3UManager.UI.Pages.Editor
             {
                 channels = channels.Concat(m3UService.GetGroupsList(M3UListModelId).M3UGroups[key].Channels).ToList();
             }
-            channelsList.OnGroupChanged(channels);
+            await channelsList.OnGroupChanged(channels);
         }
         void FilterGroups(ChangeEventArgs args)
         {
