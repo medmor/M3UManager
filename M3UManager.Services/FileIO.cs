@@ -1,6 +1,8 @@
 ﻿using M3UManager.Models;
 using M3UManager.Services.ServicesContracts;
 using System.Diagnostics;
+using Microsoft.Maui.Devices;
+using Microsoft.Maui.Storage;
 
 namespace M3UManager.Services
 {
