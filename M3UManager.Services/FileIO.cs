@@ -1,8 +1,6 @@
 ﻿using M3UManager.Models;
 using M3UManager.Services.ServicesContracts;
 using System.Diagnostics;
-using Microsoft.Maui.Devices;
-using Microsoft.Maui.Storage;
 
 namespace M3UManager.Services
 {
@@ -55,16 +53,45 @@ namespace M3UManager.Services
             var text = string.Join(separator, list.Select(c => c.FullChannelString));
             await File.WriteAllTextAsync(path, text);
         }
-        public void OpenWithVlc(string channel)
+        public async Task OpenWithVlc(string channel)
         {
             if (process != null)
             {
                 process.Kill();
             }
-            ProcessStartInfo psi = new ProcessStartInfo();
-            psi.FileName = "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe";
-            psi.Arguments = "-vvv " + channel.Trim();
-            process = Process.Start(psi);
+
+            string vlcPath = string.Empty;
+
+            if (File.Exists("C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"))
+            {
+                vlcPath = "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe";
+            }
+            else if (File.Exists("C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe"))
+            {
+                vlcPath = "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe";
+            }
+            else
+            {
+                await Application.Current.MainPage.DisplayAlert("Error", "VLC not found", "OK");
+                return;
+            }
+
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = vlcPath,
+                    Arguments = "-vvv " + channel.Trim(),
+                    WorkingDirectory = Path.GetDirectoryName(vlcPath)
+                };
+
+                process = Process.Start(psi);
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Error", $"Failed to open VLC: {ex.Message}", "OK");
+            }
         }
+
     }
 }

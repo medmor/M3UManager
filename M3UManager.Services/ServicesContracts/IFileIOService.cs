@@ -7,6 +7,6 @@ namespace M3UManager.Services.ServicesContracts
         Task<string> OpenM3U();
 
         Task SaveDictionaryAsM3U(Dictionary<string, M3UGroup> groups, string path = "C:\\Users\\enakr\\Downloads");
-        void OpenWithVlc(string channel);
+        Task OpenWithVlc(string channel);
     }
 }
