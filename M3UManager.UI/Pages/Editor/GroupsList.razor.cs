@@ -2,19 +2,21 @@
 using M3UManager.Services.ServicesContracts;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using System.IO;
+using System;
 
 namespace M3UManager.UI.Pages.Editor
 {
     public partial class GroupsList
     {
-        [Inject] IM3UService m3UService { get; set; }
-        [Inject] IFileIOService fileIO { get; set; }
-        [Inject] IJSRuntime js { get; set; }
+        [Inject] IM3UService m3UService { get; set; } = default!;
+        [Inject] IFileIOService fileIO { get; set; } = default!;
+        [Inject] IJSRuntime js { get; set; } = default!;
 
         [Parameter] public int M3UListModelId { get; set; }
-        [CascadingParameter] public Editor editor { get; set; }
-        ChannelsList channelsList;
-        Dictionary<string, M3UGroup> filtredGroups;
+        [CascadingParameter] public Editor editor { get; set; } = default!;
+        ChannelsList channelsList = default!;
+        Dictionary<string, M3UGroup> filtredGroups = default!;
         string groupFilterString = "";
 
         protected override void OnInitialized()
@@ -22,16 +24,19 @@ namespace M3UManager.UI.Pages.Editor
             filtredGroups = m3UService.GetModel(M3UListModelId).M3UGroups;
         }
 
-        void SaveList()
+        async Task SaveList()
         {
             try
             {
-                fileIO.SaveDictionaryAsM3U(m3UService.GetModel(M3UListModelId).M3UGroups);
-                js.InvokeVoidAsync("alert", "Save succeeded");
+                var groups = m3UService.GetModel(M3UListModelId).M3UGroups;
+                var downloadsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+                var savePath = Path.Combine(downloadsDir, "channels.m3u");
+                await fileIO.SaveDictionaryAsM3U(groups, downloadsDir);
+                await js.InvokeVoidAsync("alert", $"Save succeeded: {savePath}");
             }
-            catch
+            catch (Exception ex)
             {
-                js.InvokeVoidAsync("alert", "Save failed");
+                await js.InvokeVoidAsync("alert", $"Save failed: {ex.Message}");
             }
         }
         async Task DeleteGroups()
@@ -52,9 +57,16 @@ namespace M3UManager.UI.Pages.Editor
         }
         void OnSelectGroupsInput(ChangeEventArgs args)
         {
-            m3UService.SelectedGroups = (string[])args.Value;
+            var selected = args.Value as string[];
+            if (selected is null || selected.Length == 0)
+            {
+                m3UService.SelectedGroups = Array.Empty<string>();
+                channelsList.OnGroupChanged(new List<M3UChannel>());
+                return;
+            }
+            m3UService.SelectedGroups = selected;
             List<M3UChannel> channels = new List<M3UChannel>();
-            foreach (var key in (string[])args.Value)
+            foreach (var key in selected)
             {
                 channels = channels.Concat(m3UService.GetModel(M3UListModelId).M3UGroups[key].Channels).ToList();
             }
@@ -63,7 +75,7 @@ namespace M3UManager.UI.Pages.Editor
         void FilterGroups(ChangeEventArgs args)
         {
             var model = m3UService.GetModel(M3UListModelId);
-            groupFilterString = (string)args.Value;
+            groupFilterString = args.Value?.ToString() ?? string.Empty;
             if (string.IsNullOrEmpty(groupFilterString))
                 filtredGroups = model.M3UGroups;
             else
