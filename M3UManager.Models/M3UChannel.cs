@@ -18,7 +18,11 @@ namespace M3UManager.Models
         {
             Name = regexChannelName.Match(channelSring).Groups[1].Value;
             Logo = regexChannelLogo.Match(channelSring).Groups[1].Value;
-            Url = channelSring.Split('\n')[1];
+            // Extract URL more efficiently than Split: take the substring after the first newline
+            var firstNewline = channelSring.IndexOf('\n');
+            Url = firstNewline >= 0 && firstNewline + 1 < channelSring.Length
+                ? channelSring.Substring(firstNewline + 1).TrimEnd('\r', '\n')
+                : string.Empty;
             FullChannelString = channelSring;
             Group = group;
         }

@@ -65,10 +65,10 @@ namespace M3UManager.UI.Pages.Editor
                 return;
             }
             m3UService.SelectedGroups = selected;
-            List<M3UChannel> channels = new List<M3UChannel>();
+            var channels = new List<M3UChannel>();
             foreach (var key in selected)
             {
-                channels = channels.Concat(m3UService.GetModel(M3UListModelId).M3UGroups[key].Channels).ToList();
+                channels.AddRange(m3UService.GetModel(M3UListModelId).M3UGroups[key].Channels);
             }
             channelsList.OnGroupChanged(channels);
         }

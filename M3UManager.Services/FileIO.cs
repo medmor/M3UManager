@@ -49,9 +49,18 @@ namespace M3UManager.Services
         {
             if (!path.Contains(".json")) // for favorite save... to reformate later
                 path = Path.Combine(path, "channels.m3u");
-            var list = groups.Values.SelectMany(d => d.Channels).ToArray();
-            var text = string.Join(separator, list.Select(c => c.FullChannelString));
-            await File.WriteAllTextAsync(path, text);
+
+            var channels = groups.Values.SelectMany(d => d.Channels);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read, 1024 * 64, useAsync: true);
+            using var writer = new StreamWriter(stream);
+            foreach (var c in channels)
+            {
+                // Maintain original save format used elsewhere: "#EXTINF:" + FullChannelString
+                await writer.WriteAsync("#EXTINF:");
+                await writer.WriteAsync(c.FullChannelString);
+            }
+            await writer.FlushAsync();
         }
         public async Task OpenWithVlc(string channel)
         {
@@ -72,7 +81,11 @@ namespace M3UManager.Services
             }
             else
             {
-                await Application.Current.MainPage.DisplayAlert("Error", "VLC not found", "OK");
+                var page = Application.Current?.Windows?.FirstOrDefault()?.Page;
+                if (page != null)
+                {
+                    await page.DisplayAlert("Error", "VLC not found", "OK");
+                }
                 return;
             }
 
@@ -89,7 +102,11 @@ namespace M3UManager.Services
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Error", $"Failed to open VLC: {ex.Message}", "OK");
+                var page = Application.Current?.Windows?.FirstOrDefault()?.Page;
+                if (page != null)
+                {
+                    await page.DisplayAlert("Error", $"Failed to open VLC: {ex.Message}", "OK");
+                }
             }
         }
 
