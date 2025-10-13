@@ -7,17 +7,17 @@ namespace M3UManager.UI.Pages.Editor
 {
     public partial class ChannelsList
     {
-        [Inject] IJSRuntime JS { get; set; }
-        [Inject] IM3UService m3UService { get; set; }
-        [Inject] IFileIOService fileIOService { get; set; }
-        [Inject] IFavoritesService favoritesService { get; set; }
+    [Inject] IJSRuntime JS { get; set; } = default!;
+    [Inject] IM3UService m3UService { get; set; } = default!;
+    [Inject] IFileIOService fileIOService { get; set; } = default!;
+    [Inject] IFavoritesService favoritesService { get; set; } = default!;
         [Parameter] public int M3UListModelId { get; set; }
-        [CascadingParameter] public Editor editor { get; set; }
+    [CascadingParameter] public Editor editor { get; set; } = default!;
         List<M3UChannel>? Channels { get; set; }
         List<M3UChannel> filtredChannels { get; set; } = new List<M3UChannel>();
         int filtredChannelsIndex { get; set; } = 0;
-        List<M3UChannel> selectedChannels { get; set; }
-        M3UChannel? selectedChannel { get; set; }
+    List<M3UChannel> selectedChannels { get; set; } = new();
+    M3UChannel? selectedChannel { get; set; }
         int channelsToShow = 200;
 
         public void OnGroupChanged(List<M3UChannel> c)
@@ -25,21 +25,23 @@ namespace M3UManager.UI.Pages.Editor
             Channels = c;
             channelsToShow = c.Count > 200 ? 200 : c.Count - 1;
             selectedChannel = null;
-            selectedChannels = null;
+            selectedChannels = new();
             StateHasChanged();
         }
-        void OnSelectchannelsInput(ChangeEventArgs args)
+        public void ToggleSelectChannel(M3UChannel c)
         {
-            var selected = (string[])args.Value;
-            selectedChannels = Channels.Where(c => selected.Any(cc => cc == c.Name)).ToList();
-            selectedChannel = selectedChannels[0];
+            if (selectedChannels.Contains(c))
+                selectedChannels.Remove(c);
+            else
+                selectedChannels.Add(c);
+            selectedChannel = selectedChannels.LastOrDefault();
         }
         async Task FilterChannels(ChangeEventArgs args)
         {
             filtredChannels.Clear();
             filtredChannelsIndex = 0;
 
-            string filter = (string)args.Value;
+            string filter = args.Value?.ToString() ?? string.Empty;
 
             if (!string.IsNullOrEmpty(filter))
                 filtredChannels = Channels!
@@ -70,16 +72,17 @@ namespace M3UManager.UI.Pages.Editor
             cmd.Execute();
             editor.Commands.Add(cmd);
             await JS.InvokeVoidAsync("ChannelList.deselectItems");
-            OnGroupChanged(Channels.Where(c => !selectedChannels.Contains(c)).ToList());
+            if (Channels is not null)
+                OnGroupChanged(Channels.Where(c => !selectedChannels.Contains(c)).ToList());
         }
-        void PlayOnVlc() => fileIOService.OpenWithVlc(selectedChannel.Url);
-        bool IsChannelInFavorite() => favoritesService.IsChannelInFavorites(selectedChannel);
-        void AddToFavorites() => favoritesService.AddChannelToFavory(selectedChannel);
-        void RemoveFromFavorites() => favoritesService.RemoveChannelFromFavorites(selectedChannel);
+    void PlayOnVlc() { if (selectedChannel is not null) fileIOService.OpenWithVlc(selectedChannel.Url); }
+    bool IsChannelInFavorite() => selectedChannel is not null && favoritesService.IsChannelInFavorites(selectedChannel);
+    void AddToFavorites() { if (selectedChannel is not null) favoritesService.AddChannelToFavory(selectedChannel); }
+    void RemoveFromFavorites() { if (selectedChannel is not null) favoritesService.RemoveChannelFromFavorites(selectedChannel); }
         void LoadMore()
         {
             channelsToShow += 200;
-            if (channelsToShow > Channels.Count() - 1)
+            if (Channels is not null && channelsToShow > Channels.Count() - 1)
                 channelsToShow = Channels.Count() - 1;
         }
         string OptionClass(M3UChannel channel)

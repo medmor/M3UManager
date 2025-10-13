@@ -26,15 +26,16 @@
             </div>
         </div>
     </div>
-    <select id="channels-container" style="height:100%" @oninput="OnSelectchannelsInput" multiple>
+    <div id="channels-container" class="channels-container" style="height:100%; overflow:auto;">
         @for (int i = 0; i < channelsToShow; i++)
         {
             var channel = Channels[i];
-            <option id="@channel.Name" class="@OptionClass(channel)">
-                @channel.Name
-            </option>
+            <div id="@channel.Name" class="channel-item @OptionClass(channel)" @onclick="() => ToggleSelectChannel(channel)">
+                <img class="channel-logo" src="@channel.Logo" alt="logo" height="60" onerror="this.style.display='none'" />
+                <span class="channel-name">@channel.Name</span>
+            </div>
         }
-    </select>
+    </div>
     @if (channelsToShow < Channels.Count() - 1)
     {
         <button class="btn btn-outline-dark" @onclick="LoadMore">Load more</button>
