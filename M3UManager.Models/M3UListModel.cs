@@ -17,7 +17,7 @@ namespace M3UManager.Models
                 .Where(l => regex.IsMatch(l))
                 .GroupBy(l => Utils.TrimmedString(regex.Match(l).Groups[1].Value), StringComparer.OrdinalIgnoreCase);
 
-            M3UGroups = groups.ToDictionary(
+            var groupsDict = groups.ToDictionary(
                 group => group.Key,
                 group =>
                 {
@@ -27,6 +27,11 @@ namespace M3UManager.Models
                     return new M3UGroup(originalName, channels);
                 },
                 StringComparer.OrdinalIgnoreCase);
+
+            // Sort groups by descending channel count
+            M3UGroups = groupsDict
+                .OrderByDescending(g => g.Value.Channels.Count)
+                .ToDictionary(g => g.Key, g => g.Value, StringComparer.OrdinalIgnoreCase);
         }
 
         public M3UGroup GetGroup(string groupName) => M3UGroups[groupName];
@@ -94,6 +99,11 @@ namespace M3UManager.Models
                     currentExtInf = null;
                 }
             }
+
+            // Sort groups by descending channel count
+            list.M3UGroups = list.M3UGroups
+                .OrderByDescending(g => g.Value.Channels.Count)
+                .ToDictionary(g => g.Key, g => g.Value, StringComparer.OrdinalIgnoreCase);
 
             return list;
         }

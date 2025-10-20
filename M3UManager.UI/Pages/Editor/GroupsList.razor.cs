@@ -21,7 +21,10 @@ namespace M3UManager.UI.Pages.Editor
 
         protected override void OnInitialized()
         {
-            filtredGroups = m3UService.GetModel(M3UListModelId).M3UGroups;
+            var model = m3UService.GetModel(M3UListModelId);
+            filtredGroups = model.M3UGroups
+                .OrderByDescending(g => g.Value.Channels.Count)
+                .ToDictionary(g => g.Key, g => g.Value);
         }
 
         async Task SaveList()
@@ -77,11 +80,16 @@ namespace M3UManager.UI.Pages.Editor
             var model = m3UService.GetModel(M3UListModelId);
             groupFilterString = args.Value?.ToString() ?? string.Empty;
             if (string.IsNullOrEmpty(groupFilterString))
-                filtredGroups = model.M3UGroups;
+            {
+                filtredGroups = model.M3UGroups
+                    .OrderByDescending(g => g.Value.Channels.Count)
+                    .ToDictionary(g => g.Key, g => g.Value);
+            }
             else
             {
                 filtredGroups = model.M3UGroups
                     .Where(g => g.Value.Name.Contains(groupFilterString, System.StringComparison.CurrentCultureIgnoreCase))
+                    .OrderByDescending(g => g.Value.Channels.Count)
                     .ToDictionary(g => g.Key, g => g.Value);
             }
         }
