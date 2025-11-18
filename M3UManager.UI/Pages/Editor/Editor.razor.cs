@@ -25,31 +25,41 @@ namespace M3UManager.UI.Pages.Editor
         private string errorMessage = string.Empty;
         private VideoPlayer videoPlayer = default!;
 
+        // Static flag to track if cache has been checked once across all Editor instances
+        private static bool cacheChecked = false;
+
         protected override async Task OnInitializedAsync()
         {
             await base.OnInitializedAsync();
             
-            // Check if there's a cached playlist
-            if (fileIO.HasCachedPlaylist())
+            // Only check cache on first load (not on tab switches)
+            if (!cacheChecked)
             {
-                try
-                {
-                    var cache = await fileIO.LoadPlaylistCache();
-                    if (cache.playlist != null && cache.playlist.M3UGroups != null && cache.playlist.M3UGroups.Count > 0)
-                    {
-                        cachedXtreamUrl = cache.xtreamUrl ?? "Unknown";
-                        cachedDate = cache.cachedDate;
-                        showCacheDialog = true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Silently handle cache loading errors
-                }
+                cacheChecked = true;
                 
-                StateHasChanged();
+                // Check if there's a cached playlist
+                if (fileIO.HasCachedPlaylist())
+                {
+                    try
+                    {
+                        var cache = await fileIO.LoadPlaylistCache();
+                        if (cache.playlist != null && cache.playlist.M3UGroups != null && cache.playlist.M3UGroups.Count > 0)
+                        {
+                            cachedXtreamUrl = cache.xtreamUrl ?? "Unknown";
+                            cachedDate = cache.cachedDate;
+                            showCacheDialog = true;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Silently handle cache loading errors
+                    }
+                    
+                    StateHasChanged();
+                }
             }
         }
+        
         public void Refresh() => StateHasChanged();
         
         async Task OpenFile()
