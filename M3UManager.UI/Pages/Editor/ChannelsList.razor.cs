@@ -94,13 +94,13 @@ namespace M3UManager.UI.Pages.Editor
             var cl = "";
             if (filtredChannels.Contains(channel))
             {
-                cl += "bg-success";
+                cl += "bg-success text-white ";
             }
             if (selectedChannel == channel)
             {
-                cl += " border border-3 border-warning";
+                cl += "selected ";
             }
-            return cl;
+            return cl.Trim();
         }
     }
 }

@@ -1,79 +1,159 @@
 ﻿@page "/editor"
 
-<div class="btn-group d-flex mb-1">
-    @if (Commands.Count() > 0)
-    {
-        <button class="btn btn-outline-dark" @onclick="Undo" title="undo"><i class="bi bi-arrow-counterclockwise"></i></button>
-    }
-    @if (m3uService.GroupListsCount() < 2)
-    {
-        <button class="btn btn-outline-primary" @onclick="OpenFile" title="open M3U file"><i class="bi bi-file-plus"></i></button>
-        <button class="btn btn-outline-success" @onclick="ShowXtreamDialog" title="load from Xtream"><i class="bi bi-cloud-download"></i></button>
-    }
-    @if (m3uService.GroupListsCount() == 2)
-    {
-        <button class="btn btn-outline-primary" @onclick="(()=>CompareLists())" title="compare lists">
-            <i class="bi bi-signpost-split"></i>
-        </button>
-        <button class="btn btn-outline-primary " @onclick="(()=>CopyToOther(0, 1))" title="move channels left">
-            <i class="bi bi-arrow-left-square"></i>
-        </button>
-        <button class="btn btn-outline-primary" @onclick="(()=>CopyToOther(1, 0))" title="move channels right">
-            <i class="bi bi-arrow-right-square"></i>
-        </button>
-    }
+<div class="d-flex" style="height: 100vh; overflow: hidden;">
+    <!-- Main Content Area -->
+    <div class="flex-grow-1 d-flex flex-column" style="overflow: hidden;">
+        <!-- Top Toolbar -->
+        <div class="bg-light border-bottom px-3 py-2 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <h5 class="mb-0">
+                    <i class="@PageIcon"></i> @PageTitle
+                </h5>
+                @if (m3uService.GroupListsCount() > 0)
+                {
+                    <span class="badge bg-primary">@GetFilteredChannelCount() channels</span>
+                }
+            </div>
+            
+            <div class="btn-toolbar gap-2">
+                @if (Commands.Count() > 0)
+                {
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="Undo" title="Undo last action">
+                        <i class="bi bi-arrow-counterclockwise"></i> Undo
+                    </button>
+                }
+                
+                @if (m3uService.GroupListsCount() < 2)
+                {
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-primary" @onclick="ShowXtreamDialog" title="Load from Xtream Codes">
+                            <i class="bi bi-cloud-download"></i> Load Xtream
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="OpenFile" title="Open M3U file">
+                            <i class="bi bi-file-earmark-plus"></i> Open File
+                        </button>
+                    </div>
+                }
+                
+                @if (m3uService.GroupListsCount() == 2)
+                {
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-info" @onclick="CompareLists" title="Compare playlists">
+                            <i class="bi bi-signpost-split"></i> Compare
+                        </button>
+                        <button class="btn btn-sm btn-success" @onclick="(()=>CopyToOther(0, 1))" title="Copy selected to left">
+                            <i class="bi bi-arrow-left-circle"></i>
+                        </button>
+                        <button class="btn btn-sm btn-success" @onclick="(()=>CopyToOther(1, 0))" title="Copy selected to right">
+                            <i class="bi bi-arrow-right-circle"></i>
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Playlist Content Area -->
+        <div class="flex-grow-1 overflow-auto">
+            <CascadingValue Value="this">
+                @if (m3uService.GroupListsCount() == 0)
+                {
+                    <div class="d-flex align-items-center justify-content-center h-100">
+                        <div class="text-center p-5">
+                            <i class="bi bi-collection-play text-muted" style="font-size: 80px;"></i>
+                            <h3 class="mt-4 text-muted">No Playlist Loaded</h3>
+                            <p class="text-muted mb-4">Load a playlist from Xtream Codes or open an M3U file to get started</p>
+                            <div class="d-flex gap-3 justify-content-center">
+                                <button class="btn btn-primary btn-lg" @onclick="ShowXtreamDialog">
+                                    <i class="bi bi-cloud-download"></i> Load from Xtream
+                                </button>
+                                <button class="btn btn-outline-primary btn-lg" @onclick="OpenFile">
+                                    <i class="bi bi-file-earmark-plus"></i> Open M3U File
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-0 h-100">
+                        @if (m3uService.GroupListsCount() > 0)
+                        {
+                            <div class="@(m3uService.GroupListsCount() == 2 ? "col-6" : "col-12") border-end h-100">
+                                <GroupsList M3UListModelId="0"></GroupsList>
+                            </div>
+                        }
+                        @if (m3uService.GroupListsCount() == 2)
+                        {
+                            <div class="col-6 h-100">
+                                <GroupsList M3UListModelId="1"></GroupsList>
+                            </div>
+                        }
+                    </div>
+                }
+            </CascadingValue>
+        </div>
+    </div>
+
+    <!-- Right Sidebar - Now Playing Panel -->
+    <VideoPlayer @ref="videoPlayer" />
 </div>
 
 @if (showXtreamDialog)
 {
-    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog">
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 2000;">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Load from Xtream Codes</h5>
-                    <button type="button" class="btn-close" @onclick="CloseXtreamDialog"></button>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-cloud-download"></i> Load from Xtream Codes
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseXtreamDialog" disabled="@isLoading"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Xtream URL</label>
-                        <input type="text" class="form-control" @bind="xtreamUrl" 
+                        <label class="form-label fw-bold">Xtream URL</label>
+                        <input type="text" class="form-control form-control-lg" @bind="xtreamUrl" 
                                placeholder="http://server:port/username/password" 
                                disabled="@isLoading" />
                         <div class="form-text">
-                            Format: http://server:port/username/password
+                            <i class="bi bi-info-circle"></i> Format: http://server:port/username/password
                         </div>
                     </div>
                     @if (isLoading)
                     {
                         <div class="alert alert-info d-flex align-items-center" role="alert">
-                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <div class="spinner-border spinner-border-sm me-3" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
                             <div>
                                 <strong>Loading playlist...</strong>
                                 <br />
-                                <small>Fetching categories and channels from Xtream server. This may take a moment.</small>
+                                <small>Fetching Live TV, Movies, and TV Shows. This may take a minute.</small>
                             </div>
                         </div>
                     }
                     @if (!string.IsNullOrEmpty(errorMessage))
                     {
                         <div class="alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i>
                             <strong>Error!</strong> @errorMessage
                         </div>
                     }
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="CloseXtreamDialog" disabled="@isLoading">Cancel</button>
+                    <button type="button" class="btn btn-secondary" @onclick="CloseXtreamDialog" disabled="@isLoading">
+                        Cancel
+                    </button>
                     <button type="button" class="btn btn-primary" @onclick="LoadFromXtream" disabled="@(isLoading || string.IsNullOrWhiteSpace(xtreamUrl))">
                         @if (isLoading)
                         {
-                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                             <span>Loading...</span>
                         }
                         else
                         {
-                            <span>Load</span>
+                            <i class="bi bi-download me-1"></i>
+                            <span>Load Playlist</span>
                         }
                     </button>
                 </div>
@@ -84,52 +164,50 @@
 
 @if (showCacheDialog)
 {
-    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 2000;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
-                        <i class="bi bi-archive"></i> Cached Playlist Found
+                        <i class="bi bi-archive-fill"></i> Cached Playlist Found
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @onclick="CloseCacheDialog"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-info mb-3">
+                    <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
-                        <strong>A cached playlist is available</strong>
+                        <strong>A previously loaded playlist is available</strong>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label text-muted small">Source URL:</label>
-                        <div class="bg-light p-2 rounded border">
-                            <small class="text-break">@cachedXtreamUrl</small>
-                        </div>
-                    </div>
-                    @if (cachedDate.HasValue)
-                    {
-                        <div class="mb-3">
-                            <label class="form-label text-muted small">Last Updated:</label>
-                            <div class="bg-light p-2 rounded border">
-                                <small>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">Source URL</h6>
+                            <p class="card-text small text-break mb-3">@cachedXtreamUrl</p>
+                            
+                            @if (cachedDate.HasValue)
+                            {
+                                <h6 class="card-subtitle mb-2 text-muted">Last Updated</h6>
+                                <p class="card-text">
                                     <i class="bi bi-clock"></i> @cachedDate.Value.ToString("MMM dd, yyyy - hh:mm tt")
-                                    <span class="text-muted">(@GetTimeAgo(cachedDate.Value))</span>
-                                </small>
-                            </div>
+                                    <br/>
+                                    <small class="text-muted">(@GetTimeAgo(cachedDate.Value))</small>
+                                </p>
+                            }
                         </div>
-                    }
-                    <div class="alert alert-warning small">
+                    </div>
+                    <div class="alert alert-warning small mb-0">
                         <i class="bi bi-exclamation-triangle"></i>
-                        <strong>Note:</strong> Using cached data will be faster but may not include latest updates from the server.
+                        <strong>Note:</strong> Cached data loads instantly but may not include the latest updates.
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" @onclick="CloseCacheDialog">
-                        <i class="bi bi-x-circle"></i> Cancel
+                    <button type="button" class="btn btn-secondary" @onclick="CloseCacheDialog">
+                        Cancel
                     </button>
                     <button type="button" class="btn btn-outline-primary" @onclick="RefreshFromUrl">
-                        <i class="bi bi-arrow-clockwise"></i> Refresh from URL
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
                     </button>
                     <button type="button" class="btn btn-primary" @onclick="LoadCachedPlaylist">
-                        <i class="bi bi-check-circle"></i> Use Cached
+                        <i class="bi bi-lightning-fill"></i> Use Cached
                     </button>
                 </div>
             </div>

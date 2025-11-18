@@ -1,8 +1,55 @@
-﻿<div class="btn-group my-1" style="width:100%;">
-    <a class="btn btn-sm btn-outline-primary" href="/editor">Editor</a>
-    <a class="btn btn-outline-primary" href="/favorites">Favorites</a>
-    @*    <button class="btn btn-sm btn-outline-primary">Favo</button>
-    <button class="btn btn-sm btn-outline-primary">
-        <i class="bi bi-volume-mute"></i>
-    </button>*@
-</div>
+﻿<nav class="bg-dark text-white d-flex flex-column" style="width: 70px; height: 100vh;">
+    <!-- App Logo/Title -->
+    <div class="p-3 text-center border-bottom border-secondary">
+        <i class="bi bi-collection-play-fill" style="font-size: 2rem;"></i>
+    </div>
+
+    <!-- Navigation Items -->
+    <div class="flex-grow-1 py-3">
+        <NavLink href="/movies" class="nav-item text-center d-block py-3 text-white text-decoration-none" 
+                 title="Movies">
+            <i class="bi bi-film d-block mb-1" style="font-size: 1.5rem;"></i>
+            <small class="d-block" style="font-size: 0.65rem;">Movies</small>
+        </NavLink>
+
+        <NavLink href="/tvshows" class="nav-item text-center d-block py-3 text-white text-decoration-none"
+                 title="TV Shows">
+            <i class="bi bi-tv d-block mb-1" style="font-size: 1.5rem;"></i>
+            <small class="d-block" style="font-size: 0.65rem;">TV Shows</small>
+        </NavLink>
+
+        <NavLink href="/livetv" class="nav-item text-center d-block py-3 text-white text-decoration-none"
+                 title="Live TV">
+            <i class="bi bi-broadcast d-block mb-1" style="font-size: 1.5rem;"></i>
+            <small class="d-block" style="font-size: 0.65rem;">Live TV</small>
+        </NavLink>
+
+        <div class="border-top border-secondary my-2"></div>
+
+        <NavLink href="/favorites" class="nav-item text-center d-block py-3 text-white text-decoration-none"
+                 title="Favorites">
+            <i class="bi bi-star-fill d-block mb-1" style="font-size: 1.5rem;"></i>
+            <small class="d-block" style="font-size: 0.65rem;">Favorites</small>
+        </NavLink>
+    </div>
+
+    <!-- Footer Info -->
+    <div class="p-2 text-center border-top border-secondary">
+        <small class="text-muted d-block" style="font-size: 0.6rem;">M3U Manager</small>
+    </div>
+</nav>
+
+<style>
+    .nav-item {
+        transition: background-color 0.2s ease;
+    }
+
+    .nav-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-item.active {
+        background-color: #0d6efd;
+        border-left: 3px solid #fff;
+    }
+</style>

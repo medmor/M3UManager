@@ -9,6 +9,11 @@ namespace M3UManager.UI.Pages.Editor
 
         [Inject] IM3UService m3uService { get; set; }
         [Inject] IFileIOService fileIO { get; set; }
+        
+        [Parameter] public string ContentTypeFilter { get; set; } = string.Empty;
+        [Parameter] public string PageTitle { get; set; } = "Playlist Manager";
+        [Parameter] public string PageIcon { get; set; } = "bi bi-collection-play";
+        
         public List<Models.Commands.Command> Commands { get; set; } = new List<Models.Commands.Command>();
         
         private bool showXtreamDialog = false;
@@ -177,6 +182,73 @@ namespace M3UManager.UI.Pages.Editor
                 return $"{(int)(timeSpan.TotalDays / 7)} week{((int)(timeSpan.TotalDays / 7) != 1 ? "s" : "")} ago";
             
             return $"{(int)(timeSpan.TotalDays / 30)} month{((int)(timeSpan.TotalDays / 30) != 1 ? "s" : "")} ago";
+        }
+
+        private int GetTotalChannelCount()
+        {
+            int total = 0;
+            for (int i = 0; i < m3uService.GroupListsCount(); i++)
+            {
+                var groupList = m3uService.GetGroupList(i);
+                if (groupList?.M3UGroups != null)
+                {
+                    total += groupList.M3UGroups.Values.Sum(g => g.Channels.Count());
+                }
+            }
+            return total;
+        }
+
+        private int GetFilteredChannelCount()
+        {
+            if (string.IsNullOrEmpty(ContentTypeFilter))
+                return GetTotalChannelCount();
+
+            int total = 0;
+            for (int i = 0; i < m3uService.GroupListsCount(); i++)
+            {
+                var groupList = m3uService.GetGroupList(i);
+                if (groupList?.M3UGroups != null)
+                {
+                    total += groupList.M3UGroups.Values
+                        .Where(g => IsGroupMatchingFilter(g))
+                        .Sum(g => g.Channels.Count(c => IsChannelMatchingType(c)));
+                }
+            }
+            return total;
+        }
+
+        private bool IsGroupMatchingFilter(M3UGroup group)
+        {
+            if (string.IsNullOrEmpty(ContentTypeFilter))
+                return true;
+
+            // Check if group name starts with the content type prefix
+            return group.Name.StartsWith(GetContentTypePrefix(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool IsChannelMatchingType(M3UChannel channel)
+        {
+            if (string.IsNullOrEmpty(ContentTypeFilter))
+                return true;
+
+            return ContentTypeFilter switch
+            {
+                "Movie" => channel.Type == ContentType.Movie,
+                "TV Show" => channel.Type == ContentType.Series,
+                "Live TV" => channel.Type == ContentType.LiveTV,
+                _ => true
+            };
+        }
+
+        private string GetContentTypePrefix()
+        {
+            return ContentTypeFilter switch
+            {
+                "Movie" => "🎬 Movies",
+                "TV Show" => "📺 TV Shows",
+                "Live TV" => "📺 Live TV",
+                _ => ""
+            };
         }
     }
 }

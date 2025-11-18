@@ -23,8 +23,27 @@ namespace M3UManager.UI.Pages.Editor
         {
             var model = m3UService.GetModel(M3UListModelId);
             filtredGroups = model.M3UGroups
+                .Where(g => IsGroupMatchingContentFilter(g.Value))
                 .OrderByDescending(g => g.Value.Channels.Count)
                 .ToDictionary(g => g.Key, g => g.Value);
+        }
+
+        private bool IsGroupMatchingContentFilter(M3UGroup group)
+        {
+            // If no filter is set, show all groups
+            if (string.IsNullOrEmpty(editor.ContentTypeFilter))
+                return true;
+
+            // Check if group name starts with the content type prefix
+            var prefix = editor.ContentTypeFilter switch
+            {
+                "Movie" => "🎬 Movies",
+                "TV Show" => "📺 TV Shows",
+                "Live TV" => "📺 Live TV",
+                _ => ""
+            };
+
+            return group.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
         }
 
         async Task SaveList()
@@ -82,13 +101,15 @@ namespace M3UManager.UI.Pages.Editor
             if (string.IsNullOrEmpty(groupFilterString))
             {
                 filtredGroups = model.M3UGroups
+                    .Where(g => IsGroupMatchingContentFilter(g.Value))
                     .OrderByDescending(g => g.Value.Channels.Count)
                     .ToDictionary(g => g.Key, g => g.Value);
             }
             else
             {
                 filtredGroups = model.M3UGroups
-                    .Where(g => g.Value.Name.Contains(groupFilterString, System.StringComparison.CurrentCultureIgnoreCase))
+                    .Where(g => IsGroupMatchingContentFilter(g.Value) && 
+                               g.Value.Name.Contains(groupFilterString, System.StringComparison.CurrentCultureIgnoreCase))
                     .OrderByDescending(g => g.Value.Channels.Count)
                     .ToDictionary(g => g.Key, g => g.Value);
             }
