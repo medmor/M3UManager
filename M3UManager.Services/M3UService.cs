@@ -38,6 +38,21 @@ namespace M3UManager.Services
             }
         }
 
+        public void AddGroupList(M3UGroupList groupList)
+        {
+            if (groupLists.Count < 2)
+            {
+                groupLists.Add(groupList);
+            }
+        }
+
+        public M3UGroupList? GetGroupList(int index)
+        {
+            if (index >= 0 && index < groupLists.Count)
+                return groupLists[index];
+            return null;
+        }
+
         public async Task AddGroupListFromXtreamAsync(string xtreamUrl)
         {
             if (groupLists.Count >= 2)

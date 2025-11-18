@@ -12,6 +12,7 @@ namespace M3UManager.Services.Config
             services.AddHttpClient<IXtreamService, XtreamService>();
             services.AddSingleton<IM3UService, M3UService>();
             services.AddSingleton<IFileIOService, FileIO>();
+            services.AddSingleton<IMediaPlayerService, MediaPlayerService>();
         }
     }
 }

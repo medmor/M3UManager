@@ -82,6 +82,63 @@
     </div>
 }
 
+@if (showCacheDialog)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-archive"></i> Cached Playlist Found
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseCacheDialog"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>A cached playlist is available</strong>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Source URL:</label>
+                        <div class="bg-light p-2 rounded border">
+                            <small class="text-break">@cachedXtreamUrl</small>
+                        </div>
+                    </div>
+                    @if (cachedDate.HasValue)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Last Updated:</label>
+                            <div class="bg-light p-2 rounded border">
+                                <small>
+                                    <i class="bi bi-clock"></i> @cachedDate.Value.ToString("MMM dd, yyyy - hh:mm tt")
+                                    <span class="text-muted">(@GetTimeAgo(cachedDate.Value))</span>
+                                </small>
+                            </div>
+                        </div>
+                    }
+                    <div class="alert alert-warning small">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Note:</strong> Using cached data will be faster but may not include latest updates from the server.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" @onclick="CloseCacheDialog">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" @onclick="RefreshFromUrl">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh from URL
+                    </button>
+                    <button type="button" class="btn btn-primary" @onclick="LoadCachedPlaylist">
+                        <i class="bi bi-check-circle"></i> Use Cached
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<VideoPlayer @ref="videoPlayer" />
+
 <div class="row">
     <CascadingValue Value="this">
         @if (m3uService.GroupListsCount() > 0)

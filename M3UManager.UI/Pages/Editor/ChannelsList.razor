@@ -13,7 +13,7 @@
                 @if (selectedChannel != null)
                 {
                     <button class="btn btn-sm btn-danger" @onclick="RemoveChannels"><i class="bi bi-trash"></i></button>
-                    <button class="btn btn-sm btn-primary" @onclick="PlayOnVlc"><i class="bi bi-play"></i></button>
+                    <button class="btn btn-sm btn-success" @onclick="PlayChannel" title="Play"><i class="bi bi-play-circle-fill"></i></button>
                     if (IsChannelInFavorite())
                     {
                         <button class="btn btn-sm btn-danger" @onclick="RemoveFromFavorites"><i class="bi bi-star"></i></button>

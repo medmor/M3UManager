@@ -32,6 +32,10 @@
     <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Maui" Version="10.1.0" />
+    <PackageReference Include="CommunityToolkit.Maui.MediaElement" Version="4.1.1" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\M3UManager.UI\M3UManager.UI.csproj" />
   </ItemGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-windows')) and '$(Configuration)' == 'Release'">

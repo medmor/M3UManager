@@ -75,8 +75,12 @@ namespace M3UManager.UI.Pages.Editor
             if (Channels is not null)
                 OnGroupChanged(Channels.Where(c => !selectedChannels.Contains(c)).ToList());
         }
-    void PlayOnVlc() { if (selectedChannel is not null) fileIOService.OpenWithVlc(selectedChannel.Url); }
-    bool IsChannelInFavorite() => selectedChannel is not null && favoritesService.IsChannelInFavorites(selectedChannel);
+        void PlayChannel() 
+        { 
+            if (selectedChannel is not null) 
+                editor.PlayChannel(selectedChannel); 
+        }
+        bool IsChannelInFavorite() => selectedChannel is not null && favoritesService.IsChannelInFavorites(selectedChannel);
     void AddToFavorites() { if (selectedChannel is not null) favoritesService.AddChannelToFavory(selectedChannel); }
     void RemoveFromFavorites() { if (selectedChannel is not null) favoritesService.RemoveChannelFromFavorites(selectedChannel); }
         void LoadMore()

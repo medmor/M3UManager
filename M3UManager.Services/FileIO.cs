@@ -1,12 +1,32 @@
 ﻿using M3UManager.Models;
 using M3UManager.Services.ServicesContracts;
 using System.Diagnostics;
+using System.Text.Json;
 
 namespace M3UManager.Services
 {
     public class FileIO : IFileIOService
     {
-        private readonly string separator = "#EXTINF:";
+        private readonly string cacheDirectory;
+        private readonly string cacheFilePath;
+        private readonly string cacheMetaPath;
+        private string separator = "\n";
+        
+        public FileIO()
+        {
+            //separator = Environment.OSVersion.Platform == PlatformID.Win32NT ? "\r\n" : "\n";
+            
+            // Set up cache directory
+            cacheDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "M3UManager");
+            cacheFilePath = Path.Combine(cacheDirectory, "playlist_cache.json");
+            cacheMetaPath = Path.Combine(cacheDirectory, "cache_meta.json");
+            
+            // Ensure cache directory exists
+            if (!Directory.Exists(cacheDirectory))
+            {
+                Directory.CreateDirectory(cacheDirectory);
+            }
+        }
         private Process process;
         public async Task<string> OpenM3U()
         {
@@ -108,6 +128,88 @@ namespace M3UManager.Services
                     await page.DisplayAlert("Error", $"Failed to open VLC: {ex.Message}", "OK");
                 }
             }
+        }
+
+        public async Task SavePlaylistCache(M3UGroupList playlist, string xtreamUrl)
+        {
+            try
+            {
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                };
+                
+                // Save playlist data
+                var playlistJson = JsonSerializer.Serialize(playlist, options);
+                await File.WriteAllTextAsync(cacheFilePath, playlistJson);
+                
+                // Save metadata
+                var metadata = new
+                {
+                    XtreamUrl = xtreamUrl,
+                    CachedDate = DateTime.Now
+                };
+                var metaJson = JsonSerializer.Serialize(metadata, options);
+                await File.WriteAllTextAsync(cacheMetaPath, metaJson);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving cache: {ex.Message}");
+            }
+        }
+
+        public async Task<(M3UGroupList? playlist, string? xtreamUrl, DateTime? cachedDate)> LoadPlaylistCache()
+        {
+            try
+            {
+                if (!File.Exists(cacheFilePath) || !File.Exists(cacheMetaPath))
+                {
+                    return (null, null, null);
+                }
+                
+                // Load playlist data
+                var playlistJson = await File.ReadAllTextAsync(cacheFilePath);
+                var playlist = JsonSerializer.Deserialize<M3UGroupList>(playlistJson);
+                
+                // Load metadata
+                var metaJson = await File.ReadAllTextAsync(cacheMetaPath);
+                var metadata = JsonSerializer.Deserialize<JsonElement>(metaJson);
+                
+                var xtreamUrl = metadata.GetProperty("XtreamUrl").GetString();
+                var cachedDate = metadata.GetProperty("CachedDate").GetDateTime();
+                
+                return (playlist, xtreamUrl, cachedDate);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading cache: {ex.Message}");
+                return (null, null, null);
+            }
+        }
+
+        public Task ClearPlaylistCache()
+        {
+            try
+            {
+                if (File.Exists(cacheFilePath))
+                {
+                    File.Delete(cacheFilePath);
+                }
+                if (File.Exists(cacheMetaPath))
+                {
+                    File.Delete(cacheMetaPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error clearing cache: {ex.Message}");
+            }
+            return Task.CompletedTask;
+        }
+
+        public bool HasCachedPlaylist()
+        {
+            return File.Exists(cacheFilePath) && File.Exists(cacheMetaPath);
         }
 
     }
