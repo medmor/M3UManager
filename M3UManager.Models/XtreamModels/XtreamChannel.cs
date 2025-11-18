@@ -13,8 +13,13 @@ namespace M3UManager.Models.XtreamModels
         [JsonPropertyName("stream_type")]
         public string StreamType { get; set; } = string.Empty;
         
+        // For live TV and movies
         [JsonPropertyName("stream_id")]
         public int StreamId { get; set; }
+        
+        // For TV series - the API uses series_id instead of stream_id
+        [JsonPropertyName("series_id")]
+        public int SeriesId { get; set; }
         
         [JsonPropertyName("stream_icon")]
         public string StreamIcon { get; set; } = string.Empty;
@@ -39,5 +44,12 @@ namespace M3UManager.Models.XtreamModels
         
         [JsonPropertyName("tv_archive_duration")]
         public int TvArchiveDuration { get; set; }
+        
+        // Helper property to get the correct ID based on content type
+        public int GetId()
+        {
+            // For series, use series_id, otherwise use stream_id
+            return SeriesId != 0 ? SeriesId : StreamId;
+        }
     }
 }

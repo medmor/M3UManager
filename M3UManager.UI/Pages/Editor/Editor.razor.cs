@@ -32,14 +32,22 @@ namespace M3UManager.UI.Pages.Editor
             // Check if there's a cached playlist
             if (fileIO.HasCachedPlaylist())
             {
-                var cache = await fileIO.LoadPlaylistCache();
-                if (cache.playlist != null)
+                try
                 {
-                    cachedXtreamUrl = cache.xtreamUrl ?? "Unknown";
-                    cachedDate = cache.cachedDate;
-                    showCacheDialog = true;
-                    StateHasChanged();
+                    var cache = await fileIO.LoadPlaylistCache();
+                    if (cache.playlist != null && cache.playlist.M3UGroups != null && cache.playlist.M3UGroups.Count > 0)
+                    {
+                        cachedXtreamUrl = cache.xtreamUrl ?? "Unknown";
+                        cachedDate = cache.cachedDate;
+                        showCacheDialog = true;
+                    }
                 }
+                catch (Exception ex)
+                {
+                    // Silently handle cache loading errors
+                }
+                
+                StateHasChanged();
             }
         }
         public void Refresh() => StateHasChanged();
@@ -124,6 +132,10 @@ namespace M3UManager.UI.Pages.Editor
                     var cmd = new Services.M3UEditorCommands.AddXtreamModelCommand(m3uService, currentCount, cache.xtreamUrl ?? "Cached");
                     Commands.Add(cmd);
                 }
+                else
+                {
+                    errorMessage = "Failed to load cache: Cache data is corrupted or empty";
+                }
                 
                 isLoading = false;
                 StateHasChanged();
@@ -139,6 +151,7 @@ namespace M3UManager.UI.Pages.Editor
         void RefreshFromUrl()
         {
             showCacheDialog = false;
+            xtreamUrl = cachedXtreamUrl; // Pre-populate with cached URL
             ShowXtreamDialog();
         }
 

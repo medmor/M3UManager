@@ -1,6 +1,6 @@
 ﻿<div class="d-flex h-100">
     <!-- Groups Panel -->
-    <div class="d-flex flex-column border-end p-3" style="width: 320px;">
+    <div class="d-flex flex-column border-end p-3" style="width: 320px; min-width: 320px; flex-shrink: 0;">
         <!-- Groups Header -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="mb-0 fw-bold">
@@ -41,7 +41,7 @@
                                 value="@group.Value.TrimedName" 
                                 title="@group.Value.Name">
                             <span class="badge bg-primary me-1">@group.Value.Channels.Count()</span>
-                            @group.Value.Name
+                            @GetDisplayGroupName(group.Value.Name)
                         </option>
                     }
                 }

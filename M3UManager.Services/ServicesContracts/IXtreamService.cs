@@ -18,9 +18,11 @@ namespace M3UManager.Services.ServicesContracts
         // TV Shows (Series)
         Task<List<XtreamCategory>> GetSeriesCategoriesAsync(string serverUrl, string username, string password);
         Task<List<XtreamChannel>> GetSeriesAsync(string serverUrl, string username, string password);
+        Task<XtreamSeriesInfo> GetSeriesInfoAsync(string serverUrl, string username, string password, int seriesId);
         
         string GetStreamUrl(string serverUrl, string username, string password, int streamId, string extension = "m3u8");
         string GetVodUrl(string serverUrl, string username, string password, int streamId, string extension = "mp4");
         string GetSeriesUrl(string serverUrl, string username, string password, int seriesId);
+        string GetEpisodeUrl(string serverUrl, string username, string password, int episodeId, string extension = "mp4");
     }
 }

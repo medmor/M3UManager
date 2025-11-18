@@ -9,7 +9,14 @@ namespace M3UManager.Services.Config
         {
             //services.AddDbContext<AppDbContext>();
             services.AddSingleton<IFavoritesService, FavoritesService>();
-            services.AddHttpClient<IXtreamService, XtreamService>();
+            
+            // Configure HttpClient with timeout for XtreamService
+            services.AddHttpClient<IXtreamService, XtreamService>()
+                .ConfigureHttpClient(client =>
+                {
+                    client.Timeout = TimeSpan.FromSeconds(30); // 30 second timeout
+                });
+            
             services.AddSingleton<IM3UService, M3UService>();
             services.AddSingleton<IFileIOService, FileIO>();
             services.AddSingleton<IMediaPlayerService, MediaPlayerService>();

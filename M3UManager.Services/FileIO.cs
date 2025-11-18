@@ -136,7 +136,8 @@ namespace M3UManager.Services
             {
                 var options = new JsonSerializerOptions
                 {
-                    WriteIndented = true
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never
                 };
                 
                 // Save playlist data
@@ -155,6 +156,7 @@ namespace M3UManager.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Error saving cache: {ex.Message}");
+                throw;
             }
         }
 
@@ -169,7 +171,16 @@ namespace M3UManager.Services
                 
                 // Load playlist data
                 var playlistJson = await File.ReadAllTextAsync(cacheFilePath);
-                var playlist = JsonSerializer.Deserialize<M3UGroupList>(playlistJson);
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                var playlist = JsonSerializer.Deserialize<M3UGroupList>(playlistJson, options);
+                
+                if (playlist == null || playlist.M3UGroups == null)
+                {
+                    return (null, null, null);
+                }
                 
                 // Load metadata
                 var metaJson = await File.ReadAllTextAsync(cacheMetaPath);

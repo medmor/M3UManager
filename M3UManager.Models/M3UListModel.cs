@@ -1,15 +1,23 @@
 ﻿using System.Text.RegularExpressions;
+using System.Text.Json.Serialization;
 using M3UManager.Models.XtreamModels;
 
 namespace M3UManager.Models
 {
     public class M3UGroupList
     {
-    private readonly string separator = "#EXTINF:";
-    private readonly Regex regex = new Regex("group-title=\"(.*?)\"", RegexOptions.Compiled);
+        [JsonIgnore]
+        private readonly string separator = "#EXTINF:";
+        [JsonIgnore]
+        private readonly Regex regex = new Regex("group-title=\"(.*?)\"", RegexOptions.Compiled);
 
         public Dictionary<string, M3UGroup> M3UGroups { get; set; }
-        public M3UGroupList() { }
+        
+        public M3UGroupList() 
+        {
+            M3UGroups = new Dictionary<string, M3UGroup>(StringComparer.OrdinalIgnoreCase);
+        }
+        
         public M3UGroupList(string m3uListString)
         {
             var lines = m3uListString.Split(separator);
@@ -182,7 +190,7 @@ namespace M3UManager.Models
                 var m3uChannels = group.Select(xChannel =>
                 {
                     var streamUrl = urlBuilder(xChannel.StreamId);
-                    return new M3UChannel(xChannel, fullCategoryName, streamUrl, contentType);
+                    return new M3UChannel(xChannel, fullCategoryName, streamUrl, contentType, serverUrl, username, password);
                 }).ToList();
 
                 var m3uGroup = new M3UGroup(fullCategoryName, m3uChannels);

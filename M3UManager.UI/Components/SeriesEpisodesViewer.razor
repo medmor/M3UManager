@@ -1,0 +1,318 @@
+@using M3UManager.Models
+@using M3UManager.Models.XtreamModels
+@inject Services.ServicesContracts.IXtreamService XtreamService
+
+@if (IsVisible)
+{
+    @if (IsLoading)
+    {
+        <!-- Loading State -->
+        <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.7); z-index: 2000;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center p-5">
+                        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h5 class="text-primary">Loading Episodes...</h5>
+                        <p class="text-muted">Please wait while we fetch the series information</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <!-- Error State -->
+        <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.7); z-index: 2000;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle"></i> Error Loading Episodes
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-danger">
+                            <p>@ErrorMessage</p>
+                        </div>
+                        <p class="text-muted">
+                            Please check:
+                        </p>
+                        <ul class="text-muted">
+                            <li>Your internet connection</li>
+                            <li>The Xtream server is accessible</li>
+                            <li>Your credentials are still valid</li>
+                            <li>The series has episode information available</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="Close">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (SeriesInfo != null)
+    {
+        <!-- Episodes Modal - Success State -->
+        @if (SeriesInfo.Seasons != null && SeriesInfo.Seasons.Any())
+        {
+            <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.7); z-index: 2000;">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <!-- Header -->
+                        <div class="modal-header bg-primary text-white">
+                            <div class="d-flex align-items-center gap-3 w-100">
+                                @if (!string.IsNullOrEmpty(SeriesInfo.Info.Cover))
+                                {
+                                    <img src="@GetProxiedImageUrl(SeriesInfo.Info.Cover)" 
+                                         alt="@SeriesInfo.Info.Name" 
+                                         style="width: 60px; height: 90px; object-fit: cover; border-radius: 4px;"
+                                         onerror="this.style.display='none'" />
+                                }
+                                <div class="flex-grow-1">
+                                    <h5 class="modal-title mb-0">@SeriesInfo.Info.Name</h5>
+                                    @if (!string.IsNullOrEmpty(SeriesInfo.Info.Genre))
+                                    {
+                                        <small class="text-white-50">@SeriesInfo.Info.Genre</small>
+                                    }
+                                    <br />
+                                    <small class="text-white-50">
+                                        @SeriesInfo.Seasons.Count season(s) | 
+                                        @SeriesInfo.Episodes.Values.Sum(e => e.Count) total episodes
+                                    </small>
+                                </div>
+                                <button type="button" class="btn-close btn-close-white" @onclick="Close"></button>
+                            </div>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="modal-body p-0">
+                            <div class="row g-0" style="height: 70vh;">
+                                <!-- Seasons List -->
+                                <div class="col-3 border-end bg-light p-3" style="overflow-y: auto;">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-collection"></i> Seasons
+                                    </h6>
+                                    <div class="list-group">
+                                        @foreach (var season in SeriesInfo.Seasons.OrderBy(s => s.SeasonNumber))
+                                        {
+                                            var episodeCount = GetEpisodesForSeason(season.SeasonNumber).Count;
+                                            <button type="button" 
+                                                    class="list-group-item list-group-item-action @(SelectedSeason == season.SeasonNumber ? "active" : "")"
+                                                    @onclick="() => SelectSeason(season.SeasonNumber)">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span>
+                                                        <i class="bi bi-tv"></i> Season @season.SeasonNumber
+                                                    </span>
+                                                    <span class="badge @(SelectedSeason == season.SeasonNumber ? "bg-light text-dark" : "bg-secondary")">
+                                                        @episodeCount
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Episodes List -->
+                                <div class="col-9 p-3" style="overflow-y: auto;">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="fw-bold mb-0">
+                                            <i class="bi bi-play-circle"></i> Season @SelectedSeason Episodes
+                                        </h6>
+                                        <span class="badge bg-primary">@SelectedSeasonEpisodes.Count episodes</span>
+                                    </div>
+                                    
+                                    @if (SelectedSeasonEpisodes.Any())
+                                    {
+                                        <div class="row g-3">
+                                            @foreach (var episode in SelectedSeasonEpisodes.OrderBy(e => e.EpisodeNum))
+                                            {
+                                                <div class="col-12">
+                                                    <div class="card episode-card" @onclick="() => SelectEpisode(episode)" style="cursor: pointer;">
+                                                        <div class="row g-0">
+                                                            @if (!string.IsNullOrEmpty(episode.Info.MovieImage))
+                                                            {
+                                                                <div class="col-4">
+                                                                    <img src="@GetProxiedImageUrl(episode.Info.MovieImage)" 
+                                                                         class="img-fluid rounded-start" 
+                                                                         alt="@episode.Title"
+                                                                         style="height: 140px; object-fit: cover; width: 100%;"
+                                                                         onerror="this.style.display='none'" />
+                                                                </div>
+                                                                <div class="col-8">
+                                                                    <div class="card-body">
+                                                                        <h6 class="card-title">
+                                                                            <span class="badge bg-primary me-2">E@episode.EpisodeNum</span>
+                                                                            @episode.Title
+                                                                        </h6>
+                                                                        @if (!string.IsNullOrEmpty(episode.Info.Plot))
+                                                                        {
+                                                                            <p class="card-text text-muted small">@TruncateText(episode.Info.Plot, 150)</p>
+                                                                        }
+                                                                        <div class="d-flex gap-2 align-items-center">
+                                                                            @if (!string.IsNullOrEmpty(episode.Info.Duration))
+                                                                            {
+                                                                                <small class="text-muted">
+                                                                                    <i class="bi bi-clock"></i> @episode.Info.Duration min
+                                                                                </small>
+                                                                            }
+                                                                            @if (!string.IsNullOrEmpty(episode.Info.Rating))
+                                                                            {
+                                                                                <small class="text-warning">
+                                                                                    <i class="bi bi-star-fill"></i> @episode.Info.Rating
+                                                                                </small>
+                                                                            }
+                                                                            @if (!string.IsNullOrEmpty(episode.Info.ReleaseDate))
+                                                                            {
+                                                                                <small class="text-muted">
+                                                                                    <i class="bi bi-calendar"></i> @episode.Info.ReleaseDate
+                                                                                </small>
+                                                                            }
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="col-12">
+                                                                    <div class="card-body">
+                                                                        <h6 class="card-title">
+                                                                            <span class="badge bg-primary me-2">E@episode.EpisodeNum</span>
+                                                                            @episode.Title
+                                                                        </h6>
+                                                                        @if (!string.IsNullOrEmpty(episode.Info.Plot))
+                                                                        {
+                                                                            <p class="card-text text-muted small">@TruncateText(episode.Info.Plot, 200)</p>
+                                                                        }
+                                                                        <div class="d-flex gap-2 align-items-center">
+                                                                            @if (!string.IsNullOrEmpty(episode.Info.Duration))
+                                                                            {
+                                                                                <small class="text-muted">
+                                                                                    <i class="bi bi-clock"></i> @episode.Info.Duration min
+                                                                                </small>
+                                                                            }
+                                                                            @if (!string.IsNullOrEmpty(episode.Info.Rating))
+                                                                            {
+                                                                                <small class="text-warning">
+                                                                                    <i class="bi bi-star-fill"></i> @episode.Info.Rating
+                                                                                </small>
+                                                                            }
+                                                                            @if (!string.IsNullOrEmpty(episode.Info.ReleaseDate))
+                                                                            {
+                                                                                <small class="text-muted">
+                                                                                    <i class="bi bi-calendar"></i> @episode.Info.ReleaseDate
+                                                                                </small>
+                                                                            }
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-info-circle"></i> No episodes available for season @SelectedSeason.
+                                            <br />
+                                            <small>This could mean the API didn't return episode data or the season number doesn't match.</small>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Debug Info Footer (collapsible) -->
+                        @if (!string.IsNullOrEmpty(DebugInfo))
+                        {
+                            <div class="modal-footer">
+                                <div class="w-100">
+                                    <button class="btn btn-sm btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#debugInfo">
+                                        <i class="bi bi-bug"></i> Show Debug Info
+                                    </button>
+                                    <div class="collapse mt-2" id="debugInfo">
+                                        <pre class="bg-dark text-white p-3" style="max-height: 300px; overflow-y: auto; font-size: 10px;">@DebugInfo</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Fallback if SeriesInfo exists but no seasons -->
+            <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.7); z-index: 2000;">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title">
+                                <i class="bi bi-exclamation-triangle"></i> No Seasons Found
+                            </h5>
+                            <button type="button" class="btn-close" @onclick="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>SeriesInfo loaded but contains no seasons.</p>
+                            <p class="text-muted">Debug: Seasons count = @(SeriesInfo.Seasons?.Count ?? 0)</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="Close">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- Fallback if nothing matches -->
+        <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.7); z-index: 2000;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-secondary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-question-circle"></i> Unknown State
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Modal is visible but in an unexpected state.</p>
+                        <ul>
+                            <li>IsLoading: @IsLoading</li>
+                            <li>HasError: @(!string.IsNullOrEmpty(ErrorMessage))</li>
+                            <li>SeriesInfo: @(SeriesInfo == null ? "null" : "not null")</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="Close">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+<style>
+    .episode-card {
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+    
+    .episode-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-color: #0d6efd;
+    }
+    
+    .list-group-item.active {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+</style>

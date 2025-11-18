@@ -1,43 +1,85 @@
 ﻿@page "/Favorites"
+@using M3UManager.UI.Components
+@using M3UManager.Models
 
-<div class="d-flex flex-column h-100">
-    <!-- Header -->
-    <div class="bg-light border-bottom px-3 py-3">
-        <div class="d-flex align-items-center justify-content-between">
-            <h5 class="mb-0">
-                <i class="bi bi-star-fill text-warning"></i> Favorites
-                @if (favoritesService.FavoritesGroupList != null)
-                {
-                    <span class="badge bg-warning text-dark ms-2">
-                        @GetFavoritesCount() channels
-                    </span>
-                }
-            </h5>
+<div class="d-flex h-100">
+    @if (favoritesService.FavoritesGroupList == null || GetFavoritesCount() == 0)
+    {
+        <!-- Empty State -->
+        <div class="d-flex align-items-center justify-content-center w-100">
+            <div class="text-center p-5">
+                <i class="bi bi-star text-muted" style="font-size: 80px;"></i>
+                <h3 class="mt-4 text-muted">No Favorites Yet</h3>
+                <p class="text-muted mb-4">
+                    Add channels to your favorites from the playlist manager to see them here
+                </p>
+                <a href="/editor" class="btn btn-primary btn-lg">
+                    <i class="bi bi-collection-play"></i> Go to Playlist Manager
+                </a>
+            </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <!-- Groups Panel -->
+        <div class="d-flex flex-column border-end p-3" style="width: 320px; min-width: 320px; flex-shrink: 0;">
+            <!-- Groups Header -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-star-fill text-warning"></i> Favorites
+                </h5>
+                <span class="badge bg-warning text-dark">
+                    @GetFavoritesCount() channels
+                </span>
+            </div>
 
-    <!-- Content -->
-    <div class="flex-grow-1 overflow-auto">
-        @if (favoritesService.FavoritesGroupList == null || GetFavoritesCount() == 0)
-        {
-            <div class="d-flex align-items-center justify-content-center h-100">
-                <div class="text-center p-5">
-                    <i class="bi bi-star text-muted" style="font-size: 80px;"></i>
-                    <h3 class="mt-4 text-muted">No Favorites Yet</h3>
-                    <p class="text-muted mb-4">
-                        Add channels to your favorites from the playlist manager to see them here
-                    </p>
-                    <a href="/editor" class="btn btn-primary btn-lg">
-                        <i class="bi bi-collection-play"></i> Go to Playlist Manager
-                    </a>
+            <!-- Search Box -->
+            <div class="mb-2">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input class="form-control" placeholder="Search groups..." @oninput="FilterGroups" />
                 </div>
             </div>
-        }
-        else
-        {
-            <div class="p-3">
-                <Groups Id="groupList1"></Groups>
+
+            <!-- Groups List -->
+            <div class="flex-grow-1 overflow-auto">
+                <select class="form-select form-select-sm" style="height: 100%; border: none;" @oninput="OnSelectGroupsInput" multiple>
+                    @foreach (var group in filteredGroups)
+                    {
+                        if (!string.IsNullOrEmpty(group.Value.TrimedName) && group.Value.Channels.Count > 0)
+                        {
+                            <option value="@group.Value.TrimedName" title="@group.Value.Name">
+                                <span class="badge bg-warning me-1">@group.Value.Channels.Count</span>
+                                @GetDisplayGroupName(group.Value.Name)
+                            </option>
+                        }
+                    }
+                </select>
             </div>
-        }
-    </div>
+        </div>
+
+        <!-- Channels Panel -->
+        <div class="flex-grow-1 d-flex flex-column p-3">
+            <ChannelsDisplay @ref="channelsDisplay"
+                           Channels="@selectedChannels"
+                           SelectedChannel="@selectedChannel"
+                           OnChannelSelected="OnChannelSelected"
+                           OnPlay="PlayChannel"
+                           OnToggleFavorite="RemoveFromFavorites"
+                           OnShowEpisodes="ShowEpisodes"
+                           IsChannelFavorite="@((channel) => true)"
+                           ShowActions="true"
+                           ShowSearch="true"
+                           InitialViewMode="DisplayMode.Grid" />
+        </div>
+    }
 </div>
+
+<!-- Series Episodes Viewer -->
+<SeriesEpisodesViewer @ref="episodesViewer"
+                     IsVisible="showEpisodes"
+                     OnClose="CloseEpisodes"
+                     OnEpisodeSelected="PlayEpisode"
+                     UseImageProxy="true" />

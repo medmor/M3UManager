@@ -116,5 +116,29 @@ namespace M3UManager.UI.Pages.Editor
         }
 
         bool IsInBoothLists(string gTrimmedName) => m3UService.IsChannelInBothLists(gTrimmedName);
+
+        private string GetDisplayGroupName(string groupName)
+        {
+            // Remove content type prefixes from display
+            var prefixes = new[]
+            {
+                "📺 Live TV - ",
+                "🎬 Movies - ",
+                "📺 TV Shows - ",
+                "Live TV - ",
+                "Movies - ",
+                "TV Shows - "
+            };
+
+            foreach (var prefix in prefixes)
+            {
+                if (groupName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return groupName.Substring(prefix.Length);
+                }
+            }
+
+            return groupName;
+        }
     }
 }

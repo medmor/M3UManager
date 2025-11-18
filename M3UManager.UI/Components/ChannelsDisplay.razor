@@ -1,0 +1,213 @@
+@using M3UManager.Models
+@inject IJSRuntime JS
+
+@if (Channels != null && Channels.Any())
+{
+    <!-- Channels Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0 fw-bold">
+            <i class="bi bi-tv"></i> Channels
+            <span class="badge bg-secondary ms-1">@Channels.Count()</span>
+        </h6>
+        <div class="d-flex gap-2">
+            <!-- View Toggle -->
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" 
+                        class="btn @(ViewMode == DisplayMode.List ? "btn-primary" : "btn-outline-primary")" 
+                        @onclick="() => ChangeViewMode(DisplayMode.List)"
+                        title="List view">
+                    <i class="bi bi-list-ul"></i>
+                </button>
+                <button type="button" 
+                        class="btn @(ViewMode == DisplayMode.Grid ? "btn-primary" : "btn-outline-primary")" 
+                        @onclick="() => ChangeViewMode(DisplayMode.Grid)"
+                        title="Grid view">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                </button>
+            </div>
+
+            @if (SelectedChannel != null && ShowActions)
+            {
+                <div class="btn-group btn-group-sm">
+                    @if (OnPlay.HasDelegate)
+                    {
+                        <button class="btn btn-success" @onclick="() => OnPlay.InvokeAsync(SelectedChannel)" title="Play channel">
+                            <i class="bi bi-play-circle-fill"></i>
+                        </button>
+                    }
+                    @if (OnToggleFavorite.HasDelegate)
+                    {
+                        <button class="btn @(IsChannelFavorite?.Invoke(SelectedChannel) == true ? "btn-warning" : "btn-outline-warning")" 
+                                @onclick="() => OnToggleFavorite.InvokeAsync(SelectedChannel)" 
+                                title="@(IsChannelFavorite?.Invoke(SelectedChannel) == true ? "Remove from favorites" : "Add to favorites")">
+                            <i class="bi bi-star@(IsChannelFavorite?.Invoke(SelectedChannel) == true ? "-fill" : "")"></i>
+                        </button>
+                    }
+                    @if (OnDelete.HasDelegate)
+                    {
+                        <button class="btn btn-outline-danger" @onclick="() => OnDelete.InvokeAsync(SelectedChannel)" title="Delete channel">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Search Box -->
+    @if (ShowSearch)
+    {
+        <div class="mb-3">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input class="form-control" 
+                       placeholder="Search channels..." 
+                       @bind="searchText" 
+                       @bind:event="oninput" />
+                @if (!string.IsNullOrEmpty(searchText))
+                {
+                    <button class="btn btn-outline-secondary" @onclick="ClearSearch" title="Clear search">
+                        <i class="bi bi-x"></i>
+                    </button>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Channels Display -->
+    @if (ViewMode == DisplayMode.List)
+    {
+        <div class="channels-list flex-grow-1 overflow-auto border rounded p-2" style="background-color: #fff;">
+            @foreach (var channel in GetVisibleChannels())
+            {
+                <div class="channel-item d-flex align-items-center p-2 mb-1 rounded @GetChannelClass(channel)" 
+                     @onclick="() => SelectChannel(channel)"
+                     style="cursor: pointer; transition: all 0.2s;">
+                    @if (!string.IsNullOrEmpty(channel.Logo))
+                    {
+                        <img class="channel-logo rounded me-2" 
+                             src="@GetProxiedImageUrl(channel.Logo)" 
+                             alt="@channel.Name" 
+                             height="40" 
+                             width="40"
+                             style="object-fit: cover;"
+                             onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                        <div class="bg-secondary rounded me-2 align-items-center justify-content-center" 
+                             style="width: 40px; height: 40px; flex-shrink: 0; display: none;">
+                            <i class="bi bi-tv text-white"></i>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="bg-secondary rounded me-2 d-flex align-items-center justify-content-center" 
+                             style="width: 40px; height: 40px; flex-shrink: 0;">
+                            <i class="bi bi-tv text-white"></i>
+                        </div>
+                    }
+                    <div class="flex-grow-1 text-truncate">
+                        <div class="channel-name fw-medium">@channel.Name</div>
+                        @if (!string.IsNullOrEmpty(channel.Group))
+                        {
+                            <small class="text-muted">@channel.Group</small>
+                        }
+                    </div>
+                </div>
+            }
+            
+            @if (channelsToShow < FilteredChannels.Count())
+            {
+                <button class="btn btn-sm btn-outline-primary w-100 mt-2" @onclick="LoadMore">
+                    <i class="bi bi-arrow-down-circle"></i> Load more (@(FilteredChannels.Count() - channelsToShow) remaining)
+                </button>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="channels-grid flex-grow-1 overflow-auto p-2">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
+                @foreach (var channel in GetVisibleChannels())
+                {
+                    <div class="col">
+                        <div class="card h-100 channel-card @GetChannelClass(channel)" 
+                             @onclick="() => SelectChannel(channel)"
+                             style="cursor: pointer; transition: all 0.2s;">
+                            @if (!string.IsNullOrEmpty(channel.Logo))
+                            {
+                                <img class="card-img-top" 
+                                     src="@GetProxiedImageUrl(channel.Logo)" 
+                                     alt="@channel.Name" 
+                                     style="height: 150px; object-fit: cover;"
+                                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                <div class="card-img-top bg-secondary align-items-center justify-content-center" 
+                                     style="height: 150px; display: none;">
+                                    <i class="bi bi-tv text-white" style="font-size: 3rem;"></i>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" 
+                                     style="height: 150px;">
+                                    <i class="bi bi-tv text-white" style="font-size: 3rem;"></i>
+                                </div>
+                            }
+                            <div class="card-body p-2">
+                                <h6 class="card-title mb-1 text-truncate" title="@channel.Name">@channel.Name</h6>
+                                @if (!string.IsNullOrEmpty(channel.Group))
+                                {
+                                    <p class="card-text">
+                                        <small class="text-muted text-truncate d-block" title="@channel.Group">@channel.Group</small>
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            @if (channelsToShow < FilteredChannels.Count())
+            {
+                <div class="text-center mt-3">
+                    <button class="btn btn-outline-primary" @onclick="LoadMore">
+                        <i class="bi bi-arrow-down-circle"></i> Load more (@(FilteredChannels.Count() - channelsToShow) remaining)
+                    </button>
+                </div>
+            }
+        </div>
+    }
+}
+else
+{
+    <div class="d-flex align-items-center justify-content-center h-100">
+        <div class="text-center p-5 text-muted">
+            <i class="bi bi-tv" style="font-size: 60px;"></i>
+            <p class="mt-3">No channels to display</p>
+        </div>
+    </div>
+}
+
+<style>
+    .channel-item:hover,
+    .channel-card:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .channel-item.selected,
+    .channel-card.selected {
+        background-color: #0d6efd !important;
+        color: white;
+    }
+
+    .channel-item.selected .text-muted,
+    .channel-card.selected .text-muted {
+        color: rgba(255,255,255,0.8) !important;
+    }
+
+    .channels-grid {
+        background-color: #f8f9fa;
+    }
+</style>

@@ -1,5 +1,7 @@
 ﻿using M3UManager.Models;
+using M3UManager.Models.XtreamModels;
 using M3UManager.Services.ServicesContracts;
+using M3UManager.UI.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -7,100 +9,146 @@ namespace M3UManager.UI.Pages.Editor
 {
     public partial class ChannelsList
     {
-    [Inject] IJSRuntime JS { get; set; } = default!;
-    [Inject] IM3UService m3UService { get; set; } = default!;
-    [Inject] IFileIOService fileIOService { get; set; } = default!;
-    [Inject] IFavoritesService favoritesService { get; set; } = default!;
+        [Inject] IJSRuntime JS { get; set; }
+        [Inject] IM3UService m3UService { get; set; }
+        [Inject] IFavoritesService favoritesService { get; set; }
+        [Inject] IXtreamService xtreamService { get; set; }
+        [CascadingParameter] public Pages.Editor.Editor editor { get; set; }
         [Parameter] public int M3UListModelId { get; set; }
-    [CascadingParameter] public Editor editor { get; set; } = default!;
-        List<M3UChannel>? Channels { get; set; }
-        List<M3UChannel> filtredChannels { get; set; } = new List<M3UChannel>();
-        int filtredChannelsIndex { get; set; } = 0;
-    List<M3UChannel> selectedChannels { get; set; } = new();
-    M3UChannel? selectedChannel { get; set; }
-        int channelsToShow = 200;
 
-        public void OnGroupChanged(List<M3UChannel> c)
+        public List<M3UChannel>? Channels { get; set; }
+        private M3UChannel? selectedChannel;
+        private ChannelsDisplay? channelsDisplay;
+        private SeriesEpisodesViewer? episodesViewer;
+        private bool showEpisodes = false;
+
+        public void OnGroupChanged(List<M3UChannel> channels)
         {
-            Channels = c;
-            channelsToShow = c.Count > 200 ? 200 : c.Count - 1;
-            selectedChannel = null;
-            selectedChannels = new();
+            Channels = channels;
+            channelsDisplay?.UpdateChannels(channels);
             StateHasChanged();
         }
-        public void ToggleSelectChannel(M3UChannel c)
+
+        private void OnChannelSelected(M3UChannel channel)
         {
-            if (selectedChannels.Contains(c))
-                selectedChannels.Remove(c);
-            else
-                selectedChannels.Add(c);
-            selectedChannel = selectedChannels.LastOrDefault();
+            selectedChannel = channel;
         }
-        async Task FilterChannels(ChangeEventArgs args)
+
+        private async Task ShowEpisodes(M3UChannel series)
         {
-            filtredChannels.Clear();
-            filtredChannelsIndex = 0;
-
-            string filter = args.Value?.ToString() ?? string.Empty;
-
-            if (!string.IsNullOrEmpty(filter))
-                filtredChannels = Channels!
-                    .Take(channelsToShow)
-                    .Where(c => c.Name.Contains(filter, System.StringComparison.CurrentCultureIgnoreCase))
-                    .ToList();
-            if (filtredChannels.Count() > 0)
+            await JS.InvokeVoidAsync("console.log", $"[ChannelsList] ShowEpisodes called for: {series.Name}");
+            await JS.InvokeVoidAsync("console.log", $"[ChannelsList] Series Type: {series.Type}");
+            await JS.InvokeVoidAsync("console.log", $"[ChannelsList] StreamId: {series.StreamId}");
+            await JS.InvokeVoidAsync("console.log", $"[ChannelsList] CategoryId: {series.CategoryId}");
+            await JS.InvokeVoidAsync("console.log", $"[ChannelsList] Server URL: {series.XtreamServerUrl}");
+            await JS.InvokeVoidAsync("console.log", $"[ChannelsList] Username: {series.XtreamUsername}");
+            
+            if (series.Type != ContentType.Series)
             {
-                await ScrollToFiltred(0);
+                await JS.InvokeVoidAsync("console.warn", $"[ChannelsList] Not a series! Type: {series.Type}");
+                return;
             }
-            await CreateIndicators(filtredChannels.Select(c => c.Name).ToArray());
-        }
-        async Task ScrollToFiltred(int increment)
-        {
-            filtredChannelsIndex += increment;
-            if (filtredChannelsIndex > filtredChannels.Count() - 1)
-                filtredChannelsIndex = 0;
-            else if (filtredChannelsIndex < 0)
-                filtredChannelsIndex = filtredChannels.Count() - 1;
 
-            await JS.InvokeVoidAsync("ChannelList.scrollToFiltred", filtredChannels[filtredChannelsIndex].Name);
+            if (series.StreamId == 0)
+            {
+                await JS.InvokeVoidAsync("console.error", "[ChannelsList] StreamId is 0 - cannot fetch episodes!");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(series.XtreamServerUrl) || 
+                string.IsNullOrEmpty(series.XtreamUsername) || 
+                string.IsNullOrEmpty(series.XtreamPassword))
+            {
+                await JS.InvokeVoidAsync("console.error", $"[ChannelsList] Missing Xtream credentials");
+                return;
+            }
+
+            await JS.InvokeVoidAsync("console.log", "[ChannelsList] All checks passed, loading episodes...");
+            
+            // Set showEpisodes to true BEFORE loading
+            showEpisodes = true;
+            StateHasChanged();
+            
+            if (episodesViewer != null)
+            {
+                await episodesViewer.LoadSeriesAsync(series, series.XtreamServerUrl, series.XtreamUsername, series.XtreamPassword);
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("console.error", "[ChannelsList] episodesViewer is null!");
+            }
         }
-        async Task CreateIndicators(string[] ids) => await JS.InvokeVoidAsync("ChannelList.addIndicators", ids);
-        bool FilterButtonDisabled() => filtredChannels.Count() == 0;
-        async Task RemoveChannels()
+
+        private Task CloseEpisodes()
         {
-            var cmd = new Services.M3UEditorCommands.DeleteChannelsFromGroupsCommand(m3UService, M3UListModelId, selectedChannels, m3UService.SelectedGroups);
+            showEpisodes = false;
+            StateHasChanged();
+            return Task.CompletedTask;
+        }
+
+        private void PlayChannel(M3UChannel channel)
+        {
+            editor.PlayChannel(channel);
+        }
+
+        private void PlayEpisode(XtreamEpisode episode)
+        {
+            if (selectedChannel == null || episodesViewer == null)
+                return;
+
+            // Build episode URL
+            var episodeUrl = xtreamService.GetEpisodeUrl(
+                selectedChannel.XtreamServerUrl!,
+                selectedChannel.XtreamUsername!,
+                selectedChannel.XtreamPassword!,
+                int.Parse(episode.Id),
+                episode.ContainerExtension);
+
+            // Create a temporary channel for the episode
+            var episodeChannel = new M3UChannel
+            {
+                Name = $"{selectedChannel.Name} - S{episode.Season}E{episode.EpisodeNum} - {episode.Title}",
+                Url = episodeUrl,
+                Logo = episode.Info.MovieImage,
+                Group = selectedChannel.Group,
+                Type = ContentType.Series
+            };
+
+            editor.PlayChannel(episodeChannel);
+        }
+
+        private void ToggleFavorite(M3UChannel channel)
+        {
+            if (IsChannelInFavorite(channel))
+            {
+                favoritesService.RemoveChannelFromFavorites(channel);
+            }
+            else
+            {
+                favoritesService.AddChannelToFavory(channel);
+            }
+            favoritesService.SaveFavoritesListString();
+        }
+
+        private void RemoveChannel(M3UChannel channel)
+        {
+            var cmd = new Services.M3UEditorCommands.DeleteChannelsFromGroupsCommand(
+                m3UService, 
+                M3UListModelId, 
+                new List<M3UChannel> { channel }, 
+                m3UService.SelectedGroups);
             cmd.Execute();
             editor.Commands.Add(cmd);
-            await JS.InvokeVoidAsync("ChannelList.deselectItems");
-            if (Channels is not null)
-                OnGroupChanged(Channels.Where(c => !selectedChannels.Contains(c)).ToList());
-        }
-        void PlayChannel() 
-        { 
-            if (selectedChannel is not null) 
-                editor.PlayChannel(selectedChannel); 
-        }
-        bool IsChannelInFavorite() => selectedChannel is not null && favoritesService.IsChannelInFavorites(selectedChannel);
-    void AddToFavorites() { if (selectedChannel is not null) favoritesService.AddChannelToFavory(selectedChannel); }
-    void RemoveFromFavorites() { if (selectedChannel is not null) favoritesService.RemoveChannelFromFavorites(selectedChannel); }
-        void LoadMore()
-        {
-            channelsToShow += 200;
-            if (Channels is not null && channelsToShow > Channels.Count() - 1)
-                channelsToShow = Channels.Count() - 1;
-        }
-        string OptionClass(M3UChannel channel)
-        {
-            var cl = "";
-            if (filtredChannels.Contains(channel))
+            
+            if (Channels != null)
             {
-                cl += "bg-success text-white ";
+                OnGroupChanged(Channels.Where(c => c != channel).ToList());
             }
-            if (selectedChannel == channel)
-            {
-                cl += "selected ";
-            }
-            return cl.Trim();
+        }
+
+        private bool IsChannelInFavorite(M3UChannel channel)
+        {
+            return favoritesService.IsChannelInFavorites(channel);
         }
     }
 }
