@@ -9,6 +9,7 @@ namespace M3UManager.Services.Config
         {
             //services.AddDbContext<AppDbContext>();
             services.AddSingleton<IFavoritesService, FavoritesService>();
+            services.AddHttpClient<IXtreamService, XtreamService>();
             services.AddSingleton<IM3UService, M3UService>();
             services.AddSingleton<IFileIOService, FileIO>();
         }

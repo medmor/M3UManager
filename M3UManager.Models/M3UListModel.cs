@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using M3UManager.Models.XtreamModels;
 
 namespace M3UManager.Models
 {
@@ -106,6 +107,87 @@ namespace M3UManager.Models
                 .ToDictionary(g => g.Key, g => g.Value, StringComparer.OrdinalIgnoreCase);
 
             return list;
+        }
+
+        // Factory method to create M3UGroupList from Xtream Codes API data
+        public static M3UGroupList FromXtreamData(
+            List<XtreamCategory> liveCategories,
+            List<XtreamChannel> liveChannels,
+            List<XtreamCategory> vodCategories,
+            List<XtreamChannel> vodStreams,
+            List<XtreamCategory> seriesCategories,
+            List<XtreamChannel> seriesStreams,
+            string serverUrl,
+            string username,
+            string password)
+        {
+            var list = new M3UGroupList { M3UGroups = new Dictionary<string, M3UGroup>(StringComparer.OrdinalIgnoreCase) };
+
+            // Process Live TV
+            ProcessXtreamContent(list, liveCategories, liveChannels, serverUrl, username, password, 
+                ContentType.LiveTV, "📺 Live TV", 
+                (streamId) => $"{serverUrl}/live/{username}/{password}/{streamId}.m3u8");
+
+            // Process Movies (VOD)
+            ProcessXtreamContent(list, vodCategories, vodStreams, serverUrl, username, password, 
+                ContentType.Movie, "🎬 Movies", 
+                (streamId) => $"{serverUrl}/movie/{username}/{password}/{streamId}.mp4");
+
+            // Process Series
+            ProcessXtreamContent(list, seriesCategories, seriesStreams, serverUrl, username, password, 
+                ContentType.Series, "📺 TV Shows", 
+                (streamId) => $"{serverUrl}/series/{username}/{password}/{streamId}.m3u8");
+
+            // Sort groups by descending channel count
+            list.M3UGroups = list.M3UGroups
+                .OrderByDescending(g => g.Value.Channels.Count)
+                .ToDictionary(g => g.Key, g => g.Value, StringComparer.OrdinalIgnoreCase);
+
+            return list;
+        }
+
+        private static void ProcessXtreamContent(
+            M3UGroupList list,
+            List<XtreamCategory> categories,
+            List<XtreamChannel> channels,
+            string serverUrl,
+            string username,
+            string password,
+            ContentType contentType,
+            string prefix,
+            Func<int, string> urlBuilder)
+        {
+            if (channels == null || channels.Count == 0)
+                return;
+
+            // Create a dictionary of categories for quick lookup
+            var categoryDict = categories?.ToDictionary(c => c.CategoryId, c => c.CategoryName) 
+                ?? new Dictionary<string, string>();
+
+            // Group channels by category
+            var groupedChannels = channels.GroupBy(c => c.CategoryId);
+
+            foreach (var group in groupedChannels)
+            {
+                // Get category name, or use "Uncategorized" if not found
+                var categoryName = categoryDict.TryGetValue(group.Key, out var catName) 
+                    ? catName 
+                    : "Uncategorized";
+                
+                // Prefix category with content type
+                var fullCategoryName = $"{prefix} - {categoryName}";
+                var trimmedKey = Utils.TrimmedString(fullCategoryName);
+
+                // Create M3UChannel objects from XtreamChannel objects
+                var m3uChannels = group.Select(xChannel =>
+                {
+                    var streamUrl = urlBuilder(xChannel.StreamId);
+                    return new M3UChannel(xChannel, fullCategoryName, streamUrl, contentType);
+                }).ToList();
+
+                var m3uGroup = new M3UGroup(fullCategoryName, m3uChannels);
+                list.M3UGroups[trimmedKey] = m3uGroup;
+            }
         }
     }
 }

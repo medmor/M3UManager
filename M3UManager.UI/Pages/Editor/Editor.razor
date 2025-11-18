@@ -3,11 +3,12 @@
 <div class="btn-group d-flex mb-1">
     @if (Commands.Count() > 0)
     {
-        <button class="btn btn-outline-dark" @onclick="Undo" title="open new list"><i class="bi bi-arrow-counterclockwise"></i></button>
+        <button class="btn btn-outline-dark" @onclick="Undo" title="undo"><i class="bi bi-arrow-counterclockwise"></i></button>
     }
     @if (m3uService.GroupListsCount() < 2)
     {
-        <button class="btn btn-outline-primary" @onclick="OpenFile" title="open new list"><i class="bi bi-file-plus"></i></button>
+        <button class="btn btn-outline-primary" @onclick="OpenFile" title="open M3U file"><i class="bi bi-file-plus"></i></button>
+        <button class="btn btn-outline-success" @onclick="ShowXtreamDialog" title="load from Xtream"><i class="bi bi-cloud-download"></i></button>
     }
     @if (m3uService.GroupListsCount() == 2)
     {
@@ -22,6 +23,65 @@
         </button>
     }
 </div>
+
+@if (showXtreamDialog)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Load from Xtream Codes</h5>
+                    <button type="button" class="btn-close" @onclick="CloseXtreamDialog"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Xtream URL</label>
+                        <input type="text" class="form-control" @bind="xtreamUrl" 
+                               placeholder="http://server:port/username/password" 
+                               disabled="@isLoading" />
+                        <div class="form-text">
+                            Format: http://server:port/username/password
+                        </div>
+                    </div>
+                    @if (isLoading)
+                    {
+                        <div class="alert alert-info d-flex align-items-center" role="alert">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <div>
+                                <strong>Loading playlist...</strong>
+                                <br />
+                                <small>Fetching categories and channels from Xtream server. This may take a moment.</small>
+                            </div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <strong>Error!</strong> @errorMessage
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseXtreamDialog" disabled="@isLoading">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="LoadFromXtream" disabled="@(isLoading || string.IsNullOrWhiteSpace(xtreamUrl))">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            <span>Loading...</span>
+                        }
+                        else
+                        {
+                            <span>Load</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <div class="row">
     <CascadingValue Value="this">
         @if (m3uService.GroupListsCount() > 0)

@@ -1,4 +1,5 @@
 ﻿using M3UManager.Models;
+using M3UManager.Models.XtreamModels;
 using M3UManager.Services.ServicesContracts;
 
 namespace M3UManager.Services
@@ -8,6 +9,12 @@ namespace M3UManager.Services
         public string[] SelectedGroups { get; set; } = new string[0];
         private readonly List<M3UGroupList> groupLists = new List<M3UGroupList>();
         private string[] inBothLists = new string[0];
+        private readonly IXtreamService _xtreamService;
+
+        public M3UService(IXtreamService xtreamService)
+        {
+            _xtreamService = xtreamService;
+        }
 
         public M3UGroupList GetModel(int index) => groupLists[index];
         public string GetM3UString(int index) => GetModel(index).GetM3UString();
@@ -29,6 +36,69 @@ namespace M3UManager.Services
             {
                 groupLists.Add(new M3UGroupList(m3uString));
             }
+        }
+
+        public async Task AddGroupListFromXtreamAsync(string xtreamUrl)
+        {
+            if (groupLists.Count >= 2)
+                return;
+
+            // Parse the Xtream URL to extract authentication info
+            var authInfo = XtreamAuthInfo.Parse(xtreamUrl);
+            
+            if (string.IsNullOrWhiteSpace(authInfo.Username) || 
+                string.IsNullOrWhiteSpace(authInfo.Password) || 
+                string.IsNullOrWhiteSpace(authInfo.ServerUrl))
+            {
+                throw new ArgumentException("Invalid Xtream URL format. Expected format: http://server:port/username/password");
+            }
+
+            // Fetch Live TV categories and channels
+            var liveCategories = await _xtreamService.GetLiveCategoriesAsync(
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            var liveChannels = await _xtreamService.GetLiveStreamsAsync(
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            // Fetch VOD (Movies) categories and streams
+            var vodCategories = await _xtreamService.GetVodCategoriesAsync(
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            var vodStreams = await _xtreamService.GetVodStreamsAsync(
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            // Fetch Series (TV Shows) categories and streams
+            var seriesCategories = await _xtreamService.GetSeriesCategoriesAsync(
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            var seriesStreams = await _xtreamService.GetSeriesAsync(
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            // Create M3UGroupList from Xtream data with all content types
+            var groupList = M3UGroupList.FromXtreamData(
+                liveCategories, 
+                liveChannels,
+                vodCategories,
+                vodStreams,
+                seriesCategories,
+                seriesStreams,
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            groupLists.Add(groupList);
         }
         public void RemoveGroupList(int modelId) => groupLists.Remove(GetModel(modelId));
         public int GroupListsCount() => groupLists.Count();

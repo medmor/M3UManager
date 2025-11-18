@@ -12,6 +12,7 @@ namespace M3UManager.Services.ServicesContracts
         public void CompareGroupLists();
         public bool IsChannelInBothLists(string channelTrimmedName);
         public void AddGroupList(string m3uString);
+        public Task AddGroupListFromXtreamAsync(string xtreamUrl);
         public void RemoveGroupList(int modelId);
         public void DeleteGroupsFromList(int modelId, string[] selected);
         public void AddGroupsToList(int modelId, M3UGroup[] groups);
