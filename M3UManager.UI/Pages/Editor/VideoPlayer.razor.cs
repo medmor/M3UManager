@@ -13,7 +13,7 @@ namespace M3UManager.UI.Pages.Editor
         private string channelName = string.Empty;
         private string contentType = string.Empty;
 
-        public void PlayChannel(M3UChannel channel)
+        public async void PlayChannel(M3UChannel channel)
         {
             streamUrl = channel.Url;
             channelName = channel.Name;
@@ -28,8 +28,8 @@ namespace M3UManager.UI.Pages.Editor
             
             StateHasChanged();
             
-            // Launch or switch stream in external player
-            MediaPlayerService.PlayStream(streamUrl);
+            // Open native media player window
+            await MediaPlayerService.OpenPlayerWindow(streamUrl, channelName);
         }
 
         public void ClosePlayer()
@@ -38,8 +38,7 @@ namespace M3UManager.UI.Pages.Editor
             streamUrl = string.Empty;
             channelName = string.Empty;
             
-            // Stop the media player
-            MediaPlayerService.StopStream();
+            // The player window handles its own cleanup
             
             StateHasChanged();
         }

@@ -21,7 +21,7 @@
         @foreach (var channel in Channels)
         {
             <option id="@channel.Name" class="list-group-item @(filtredChannels.Contains(channel)?"bg-success":"")"
-            @ondblclick="()=>PlayOnVlc(channel)" @onclick="()=>SelectChannel(channel)" style="line-height:1em">
+            @ondblclick="()=>PlayChannel(channel)" @onclick="()=>SelectChannel(channel)" style="line-height:1em">
                 @channel.Name
             </option>
         }

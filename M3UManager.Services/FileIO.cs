@@ -11,9 +11,11 @@ namespace M3UManager.Services
         private readonly string cacheFilePath;
         private readonly string cacheMetaPath;
         private string separator = "\n";
+        private readonly IMediaPlayerService _mediaPlayerService;
         
-        public FileIO()
+        public FileIO(IMediaPlayerService mediaPlayerService)
         {
+            _mediaPlayerService = mediaPlayerService;
             //separator = Environment.OSVersion.Platform == PlatformID.Win32NT ? "\r\n" : "\n";
             
             // Set up cache directory
@@ -82,52 +84,9 @@ namespace M3UManager.Services
             }
             await writer.FlushAsync();
         }
-        public async Task OpenWithVlc(string channel)
+        public async Task OpenWithPlayer(string channel, string channelName = "")
         {
-            if (process != null)
-            {
-                process.Kill();
-            }
-
-            string vlcPath = string.Empty;
-
-            if (File.Exists("C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"))
-            {
-                vlcPath = "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe";
-            }
-            else if (File.Exists("C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe"))
-            {
-                vlcPath = "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe";
-            }
-            else
-            {
-                var page = Application.Current?.Windows?.FirstOrDefault()?.Page;
-                if (page != null)
-                {
-                    await page.DisplayAlert("Error", "VLC not found", "OK");
-                }
-                return;
-            }
-
-            try
-            {
-                ProcessStartInfo psi = new ProcessStartInfo
-                {
-                    FileName = vlcPath,
-                    Arguments = "-vvv " + channel.Trim(),
-                    WorkingDirectory = Path.GetDirectoryName(vlcPath)
-                };
-
-                process = Process.Start(psi);
-            }
-            catch (Exception ex)
-            {
-                var page = Application.Current?.Windows?.FirstOrDefault()?.Page;
-                if (page != null)
-                {
-                    await page.DisplayAlert("Error", $"Failed to open VLC: {ex.Message}", "OK");
-                }
-            }
+            await _mediaPlayerService.OpenPlayerWindow(channel.Trim(), channelName);
         }
 
         public async Task SavePlaylistCache(M3UGroupList playlist, string xtreamUrl)

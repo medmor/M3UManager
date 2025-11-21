@@ -49,7 +49,7 @@ namespace M3UManager.UI.Pages.Favorites
         }
         async Task CreateIndicators(string[] ids) => await JS.InvokeVoidAsync("ChannelList.addIndicators", ids);
         bool FilterButtonDisabled() => filtredChannels.Count() == 0;
-        void PlayOnVlc(M3UChannel channel) => favoritesService.fileIOService.OpenWithVlc(channel.Url);
+        async Task PlayChannel(M3UChannel channel) => await favoritesService.fileIOService.OpenWithPlayer(channel.Url, channel.Name);
         void RemoveFromFavorites()
         {
             favoritesService.RemoveChannelFromFavorites(selectedChannel);

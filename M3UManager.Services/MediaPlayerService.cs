@@ -6,6 +6,13 @@ namespace M3UManager.Services
     public class MediaPlayerService : IMediaPlayerService
     {
         private Process? currentProcess;
+        private Func<string, string, Task>? _windowFactory;
+        private readonly List<WeakReference> _playerWindows = new();
+
+        public void RegisterWindowFactory(Func<string, string, Task> windowFactory)
+        {
+            _windowFactory = windowFactory;
+        }
 
         public void PlayStream(string streamUrl)
         {
@@ -55,6 +62,22 @@ namespace M3UManager.Services
             finally
             {
                 currentProcess = null;
+            }
+        }
+
+        public async Task OpenPlayerWindow(string streamUrl, string channelName)
+        {
+            // Stop any VLC process (but allow multiple native player windows)
+            StopStream();
+
+            // Use the registered factory to open a new window
+            if (_windowFactory != null)
+            {
+                await _windowFactory(streamUrl, channelName);
+            }
+            else
+            {
+                throw new InvalidOperationException("Window factory not registered. Call RegisterWindowFactory during app initialization.");
             }
         }
     }

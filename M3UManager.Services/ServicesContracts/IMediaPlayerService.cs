@@ -4,5 +4,7 @@ namespace M3UManager.Services.ServicesContracts
     {
         void PlayStream(string streamUrl);
         void StopStream();
+        Task OpenPlayerWindow(string streamUrl, string channelName);
+        void RegisterWindowFactory(Func<string, string, Task> windowFactory);
     }
 }

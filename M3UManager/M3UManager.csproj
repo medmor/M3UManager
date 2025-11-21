@@ -38,6 +38,11 @@
   <ItemGroup>
     <ProjectReference Include="..\M3UManager.UI\M3UManager.UI.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <MauiXaml Update="Views\PlayerWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+  </ItemGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-windows')) and '$(Configuration)' == 'Release'">
     <GenerateAppxPackageOnBuild>true</GenerateAppxPackageOnBuild>
     <AppxPackageSigningEnabled>true</AppxPackageSigningEnabled>

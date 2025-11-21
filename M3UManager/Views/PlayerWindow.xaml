@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="M3UManager.Views.PlayerWindow"
+             Title="Media Player"
+             BackgroundColor="Black">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Media Element -->
+        <toolkit:MediaElement x:Name="mediaElement"
+                              Grid.Row="0"
+                              ShouldShowPlaybackControls="True"
+                              ShouldAutoPlay="True"
+                              ShouldKeepScreenOn="True"
+                              BackgroundColor="Black"
+                              HeightRequest="600"
+                              WidthRequest="800" />
+
+        <!-- Channel Info Panel -->
+        <Grid Grid.Row="1" 
+              BackgroundColor="#1E1E1E" 
+              Padding="15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackLayout Grid.Column="0" Spacing="5">
+                <Label x:Name="channelNameLabel"
+                       Text="Channel Name"
+                       TextColor="White"
+                       FontSize="18"
+                       FontAttributes="Bold" />
+                <Label x:Name="streamUrlLabel"
+                       Text="Stream URL"
+                       TextColor="Gray"
+                       FontSize="12"
+                       LineBreakMode="TailTruncation" />
+            </StackLayout>
+
+            <Button Grid.Column="1"
+                    Text="Close"
+                    BackgroundColor="#DC3545"
+                    TextColor="White"
+                    Clicked="OnCloseClicked"
+                    WidthRequest="100"
+                    HeightRequest="40"
+                    VerticalOptions="Center" />
+        </Grid>
+    </Grid>
+</ContentPage>
