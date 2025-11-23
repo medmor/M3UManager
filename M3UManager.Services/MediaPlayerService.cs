@@ -7,11 +7,17 @@ namespace M3UManager.Services
     {
         private Process? currentProcess;
         private Func<string, string, Task>? _windowFactory;
+        private Func<string, string, Task>? _pipFactory;
         private readonly List<WeakReference> _playerWindows = new();
 
         public void RegisterWindowFactory(Func<string, string, Task> windowFactory)
         {
             _windowFactory = windowFactory;
+        }
+
+        public void RegisterPipFactory(Func<string, string, Task> pipFactory)
+        {
+            _pipFactory = pipFactory;
         }
 
         public void PlayStream(string streamUrl)
@@ -78,6 +84,22 @@ namespace M3UManager.Services
             else
             {
                 throw new InvalidOperationException("Window factory not registered. Call RegisterWindowFactory during app initialization.");
+            }
+        }
+
+        public async Task OpenPipPlayer(string streamUrl, string channelName)
+        {
+            // Stop any VLC process
+            StopStream();
+
+            // Use the registered PiP factory
+            if (_pipFactory != null)
+            {
+                await _pipFactory(streamUrl, channelName);
+            }
+            else
+            {
+                throw new InvalidOperationException("PiP factory not registered. Call RegisterPipFactory during app initialization.");
             }
         }
     }

@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="M3UManager.Views.PipPlayerView"
+             x:Name="pipRoot"
+             IsVisible="False">
+    
+    <AbsoluteLayout x:Name="pipLayout">
+        <!-- PiP Player Container -->
+        <Border x:Name="pipContainer"
+                BackgroundColor="Black"
+                StrokeThickness="2"
+                Stroke="#007ACC"
+                StrokeShape="RoundRectangle 8"
+                Shadow="{Shadow Brush=Black, Offset='5,5', Radius=15, Opacity=0.5}"
+                AbsoluteLayout.LayoutBounds="0, 0, 320, 200"
+                AbsoluteLayout.LayoutFlags="None">
+            
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Media Player -->
+                <toolkit:MediaElement x:Name="mediaElement"
+                                      Grid.Row="0"
+                                      ShouldShowPlaybackControls="False"
+                                      ShouldAutoPlay="True"
+                                      ShouldKeepScreenOn="True"
+                                      BackgroundColor="Black" />
+
+                <!-- Custom Controls Overlay -->
+                <Grid Grid.Row="0" 
+                      x:Name="controlsOverlay"
+                      BackgroundColor="#80000000"
+                      IsVisible="False"
+                      Padding="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Top Bar with Channel Name -->
+                    <Label Grid.Row="0"
+                           x:Name="channelNameLabel"
+                           Text="Channel Name"
+                           TextColor="White"
+                           FontSize="12"
+                           FontAttributes="Bold"
+                           Margin="0,0,0,5" />
+
+                    <!-- Center Play/Pause Button -->
+                    <Button Grid.Row="1"
+                            x:Name="playPauseButton"
+                            BackgroundColor="Transparent"
+                            TextColor="White"
+                            FontSize="40"
+                            Text="⏸"
+                            Clicked="OnPlayPauseClicked"
+                            WidthRequest="50"
+                            HeightRequest="50"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center" />
+
+                    <!-- Progress Bar -->
+                    <Grid Grid.Row="2" Margin="0,0,0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Column="0"
+                               x:Name="currentTimeLabel"
+                               Text="00:00"
+                               TextColor="White"
+                               FontSize="9"
+                               VerticalOptions="Center"
+                               Margin="0,0,3,0" />
+
+                        <Slider Grid.Column="1"
+                                x:Name="progressSlider"
+                                Minimum="0"
+                                Maximum="100"
+                                Value="0"
+                                ThumbColor="White"
+                                MinimumTrackColor="#007ACC"
+                                MaximumTrackColor="#555555"
+                                ValueChanged="OnProgressChanged"
+                                DragCompleted="OnProgressDragCompleted"
+                                HeightRequest="20" />
+
+                        <Label Grid.Column="2"
+                               x:Name="durationLabel"
+                               Text="00:00"
+                               TextColor="White"
+                               FontSize="9"
+                               VerticalOptions="Center"
+                               Margin="3,0,0,0" />
+                    </Grid>
+
+                    <!-- Bottom Control Bar -->
+                    <Grid Grid.Row="3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Rewind 10s -->
+                        <Button Grid.Column="0"
+                                BackgroundColor="Transparent"
+                                TextColor="White"
+                                FontSize="14"
+                                Text="⏪"
+                                Clicked="OnRewind10Clicked"
+                                WidthRequest="24"
+                                HeightRequest="24"
+                                Padding="0"
+                                Margin="0,0,3,0" />
+
+                        <!-- Forward 10s -->
+                        <Button Grid.Column="1"
+                                BackgroundColor="Transparent"
+                                TextColor="White"
+                                FontSize="14"
+                                Text="⏩"
+                                Clicked="OnForward10Clicked"
+                                WidthRequest="24"
+                                HeightRequest="24"
+                                Padding="0"
+                                Margin="0,0,3,0" />
+
+                        <!-- Spacer -->
+                        <BoxView Grid.Column="2" Color="Transparent" />
+
+                        <!-- Volume Button -->
+                        <Button Grid.Column="3"
+                                x:Name="volumeButton"
+                                BackgroundColor="Transparent"
+                                TextColor="White"
+                                FontSize="14"
+                                Text="🔊"
+                                Clicked="OnVolumeClicked"
+                                WidthRequest="24"
+                                HeightRequest="24"
+                                Padding="0"
+                                Margin="0,0,3,0" />
+
+                        <!-- Expand to Full Window Button -->
+                        <Button Grid.Column="4"
+                                x:Name="expandButton"
+                                BackgroundColor="Transparent"
+                                TextColor="White"
+                                FontSize="14"
+                                Text="⛶"
+                                Clicked="OnExpandClicked"
+                                WidthRequest="24"
+                                HeightRequest="24"
+                                Padding="0"
+                                Margin="0,0,3,0" />
+
+                        <!-- Close Button (removed from here, moved to drag bar) -->
+                    </Grid>
+                </Grid>
+
+                <!-- Drag Handle Bar -->
+                <Grid Grid.Row="1" 
+                      BackgroundColor="#2D2D30"
+                      HeightRequest="30">
+                    <Grid.GestureRecognizers>
+                        <PanGestureRecognizer PanUpdated="OnPanUpdated" />
+                    </Grid.GestureRecognizers>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Channel Info -->
+                    <Label Grid.Column="0"
+                           x:Name="pipChannelLabel"
+                           Text="Channel"
+                           TextColor="White"
+                           FontSize="11"
+                           VerticalOptions="Center"
+                           Margin="10,0" />
+
+                    <!-- Close Button -->
+                    <Button Grid.Column="1"
+                            x:Name="closeButton"
+                            BackgroundColor="Transparent"
+                            TextColor="White"
+                            FontSize="14"
+                            Text="✕"
+                            Clicked="OnClosePipClicked"
+                            WidthRequest="24"
+                            HeightRequest="24"
+                            Padding="0"
+                            Margin="5,0" />
+
+                    <!-- Resize Indicator -->
+                    <Label Grid.Column="2"
+                           Text="??"
+                           TextColor="#888"
+                           FontSize="14"
+                           VerticalOptions="Center"
+                           Margin="0,0,10,0">
+                        <Label.GestureRecognizers>
+                            <PanGestureRecognizer PanUpdated="OnResizePanUpdated" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Grid>
+            </Grid>
+
+            <!-- Tap Gesture to Show/Hide Controls -->
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnPipTapped" />
+            </Border.GestureRecognizers>
+        </Border>
+    </AbsoluteLayout>
+</ContentView>

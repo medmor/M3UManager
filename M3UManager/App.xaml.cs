@@ -17,7 +17,7 @@ public partial class App : Application
         this.favoritesService = favoritesService;
         this.mediaPlayerService = mediaPlayerService;
         
-        // Register the player window factory to create independent windows
+        // Register the player window factory
         mediaPlayerService.RegisterWindowFactory(async (streamUrl, channelName) =>
         {
             var playerWindow = new PlayerWindow(streamUrl, channelName);
@@ -33,6 +33,17 @@ public partial class App : Application
             };
             
             Application.Current?.OpenWindow(newWindow);
+            
+            await Task.CompletedTask;
+        });
+
+        // Register the PiP player factory
+        mediaPlayerService.RegisterPipFactory(async (streamUrl, channelName) =>
+        {
+            if (MainPage is MainPage mainPage)
+            {
+                mainPage.OpenPipPlayer(streamUrl, channelName);
+            }
             
             await Task.CompletedTask;
         });

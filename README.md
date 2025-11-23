@@ -11,6 +11,7 @@ A modern cross-platform IPTV player and playlist manager built with .NET MAUI an
 - **Favorites Management**: Save and manage your favorite channels
 - **Integrated Media Player**: Native MediaElement player with independent windows
 - **Multi-Window Support**: Browse channels while watching (Windows)
+- **Picture-in-Picture Mode**: Minimized playback overlay with draggable player
 - **Search & Filter**: Quick search across channels and groups
 - **Playlist Cache**: Offline access to playlist data
 - **Channel Grid & List Views**: Multiple viewing layouts
@@ -29,22 +30,27 @@ A modern cross-platform IPTV player and playlist manager built with .NET MAUI an
 ### ?? High Priority
 
 #### Player Enhancements
-- [ ] **Picture-in-Picture (PiP) Mode**
-  - Allow minimized playback overlay
-  - Draggable mini-player on main window
+- [x] **Picture-in-Picture (PiP) Mode**
+  - [x] Allow minimized playback overlay
+  - [x] Draggable mini-player on main window
+  - [x] Resizable PiP window
+  - [x] Expand to full window
+  - [x] Auto-hide controls
   
-- [ ] **Enhanced Playback Controls**
-  - [ ] Add progress bar with timeline
-  - [ ] Volume slider with mute button
-  - [ ] Display current time / total duration
-  - [ ] Add 10s forward/backward buttons
-  - [ ] Implement keyboard shortcuts:
+- [x] **Enhanced Playback Controls**
+  - [x] Add progress bar with timeline
+  - [x] Volume slider with mute button
+  - [x] Display current time / total duration
+  - [x] Add 10s forward/backward buttons
+  - [x] Implement keyboard shortcuts (handlers ready):
     - Space: Play/Pause
     - Arrow Left/Right: Seek -10s/+10s
     - Arrow Up/Down: Volume up/down
     - F: Fullscreen toggle
     - M: Mute toggle
     - Esc: Exit fullscreen/close player
+  - [x] Auto-hide controls overlay
+  - [x] Tap to show/hide controls
 
 - [ ] **Stream Quality Selection**
   - Detect available quality levels
