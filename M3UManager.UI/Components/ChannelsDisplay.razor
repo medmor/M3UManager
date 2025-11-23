@@ -35,6 +35,12 @@
                             <i class="bi bi-play-circle-fill"></i>
                         </button>
                     }
+                    @if (OnPlayPip.HasDelegate)
+                    {
+                        <button class="btn btn-info" @onclick="() => OnPlayPip.InvokeAsync(SelectedChannel)" title="Play in Picture-in-Picture">
+                            <i class="bi bi-pip"></i>
+                        </button>
+                    }
                     @if (OnToggleFavorite.HasDelegate)
                     {
                         <button class="btn @(IsChannelFavorite?.Invoke(SelectedChannel) == true ? "btn-warning" : "btn-outline-warning")" 

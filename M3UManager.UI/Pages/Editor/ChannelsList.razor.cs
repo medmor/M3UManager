@@ -13,6 +13,7 @@ namespace M3UManager.UI.Pages.Editor
         [Inject] IM3UService m3UService { get; set; }
         [Inject] IFavoritesService favoritesService { get; set; }
         [Inject] IXtreamService xtreamService { get; set; }
+        [Inject] IMediaPlayerService mediaPlayerService { get; set; }
         [CascadingParameter] public Pages.Editor.Editor editor { get; set; }
         [Parameter] public int M3UListModelId { get; set; }
 
@@ -89,6 +90,11 @@ namespace M3UManager.UI.Pages.Editor
         private void PlayChannel(M3UChannel channel)
         {
             editor.PlayChannel(channel);
+        }
+
+        private async Task PlayChannelPip(M3UChannel channel)
+        {
+            await mediaPlayerService.OpenPipPlayer(channel.Url, channel.Name);
         }
 
         private void PlayEpisode(XtreamEpisode episode)

@@ -11,6 +11,7 @@ namespace M3UManager.UI.Pages.Favorites
     {
         [Inject] private IFavoritesService favoritesService { get; set; }
         [Inject] private IXtreamService xtreamService { get; set; }
+        [Inject] private IMediaPlayerService mediaPlayerService { get; set; }
         [Inject] private IJSRuntime JS { get; set; }
 
         private ChannelsDisplay? channelsDisplay;
@@ -129,8 +130,13 @@ namespace M3UManager.UI.Pages.Favorites
 
         private void PlayChannel(M3UChannel channel)
         {
-            // Navigate to play the channel
-            // You might need to inject a video player service here
+            // Open the channel in a player window
+            _ = mediaPlayerService.OpenPlayerWindow(channel.Url, channel.Name);
+        }
+
+        private async Task PlayChannelPip(M3UChannel channel)
+        {
+            await mediaPlayerService.OpenPipPlayer(channel.Url, channel.Name);
         }
 
         private void PlayEpisode(XtreamEpisode episode)
