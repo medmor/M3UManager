@@ -6,8 +6,8 @@ namespace M3UManager.Views
 {
     public partial class PlayerWindow : ContentPage
     {
-        private readonly string _streamUrl;
-        private readonly string _channelName;
+        private string _streamUrl;
+        private string _channelName;
         private bool _isPlaying = true;
         private bool _isSeeking = false;
         private System.Timers.Timer? _progressTimer;
@@ -20,11 +20,7 @@ namespace M3UManager.Views
             _streamUrl = streamUrl;
             _channelName = channelName;
             
-            channelNameLabel.Text = channelName;
-            overlayChannelName.Text = channelName;
-            streamUrlLabel.Text = streamUrl;
-            
-            mediaElement.Source = MediaSource.FromUri(streamUrl);
+            LoadStream(streamUrl, channelName);
             
             // Handle media events
             mediaElement.StateChanged += OnMediaStateChanged;
@@ -47,6 +43,31 @@ namespace M3UManager.Views
 
             // Add keyboard event handler
             this.Loaded += OnPageLoaded;
+        }
+        
+        private void LoadStream(string streamUrl, string channelName)
+        {
+            _streamUrl = streamUrl;
+            _channelName = channelName;
+            
+            // Stop current stream if playing
+            if (mediaElement.CurrentState != MediaElementState.None)
+            {
+                mediaElement.Stop();
+            }
+            
+            // Load new stream
+            mediaElement.Source = MediaSource.FromUri(streamUrl);
+            channelNameLabel.Text = channelName;
+            mediaElement.Play();
+        }
+        
+        public void UpdateStream(string streamUrl, string channelName)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                LoadStream(streamUrl, channelName);
+            });
         }
 
         private void OnPageLoaded(object? sender, EventArgs e)
@@ -346,18 +367,23 @@ namespace M3UManager.Views
             }
         }
 
-        protected override void OnDisappearing()
+        public void Cleanup()
         {
-            base.OnDisappearing();
-            
-            // Cleanup
+            // Stop and cleanup timers
             _progressTimer?.Stop();
             _progressTimer?.Dispose();
             _controlsTimer?.Stop();
             _controlsTimer?.Dispose();
             
+            // Stop media playback
             mediaElement.Stop();
             mediaElement.Handler?.DisconnectHandler();
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            Cleanup();
         }
 
         // Keyboard shortcut handlers (to be implemented with platform-specific code)

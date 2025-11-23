@@ -8,7 +8,6 @@ namespace M3UManager.Views
     {
         private bool _isPlaying = true;
         private bool _isSeeking = false;
-        private System.Timers.Timer? _controlsTimer;
         private System.Timers.Timer? _progressTimer;
 
         public event EventHandler? ExpandRequested;
@@ -18,12 +17,8 @@ namespace M3UManager.Views
         {
             InitializeComponent();
 
-            // Setup controls auto-hide timer
-            _controlsTimer = new System.Timers.Timer(3000);
-            _controlsTimer.Elapsed += (s, e) => MainThread.BeginInvokeOnMainThread(() =>
-            {
-                controlsOverlay.IsVisible = false;
-            });
+            // Don't auto-hide controls in PIP mode - window is small, controls should stay visible
+            controlsOverlay.IsVisible = true;
 
             // Setup progress update timer
             _progressTimer = new System.Timers.Timer(500);
@@ -31,6 +26,12 @@ namespace M3UManager.Views
             
             // Cleanup when page is disappearing
             this.Unloaded += (s, e) => Cleanup();
+            
+            // Setup media event handlers once
+            mediaElement.StateChanged += OnMediaStateChanged;
+            mediaElement.MediaFailed += OnMediaFailed;
+            mediaElement.MediaOpened += OnMediaOpened;
+            mediaElement.PositionChanged += OnPositionChanged;
         }
 
         public void LoadStream(string streamUrl, string channelName)
@@ -39,13 +40,24 @@ namespace M3UManager.Views
             pipChannelLabel.Text = channelName;
             this.Title = channelName;
             
+            // Stop current stream if playing
+            if (mediaElement.CurrentState == MediaElementState.Playing || 
+                mediaElement.CurrentState == MediaElementState.Paused)
+            {
+                mediaElement.Stop();
+            }
+            
             mediaElement.Source = MediaSource.FromUri(streamUrl);
-            mediaElement.StateChanged += OnMediaStateChanged;
-            mediaElement.MediaFailed += OnMediaFailed;
-            mediaElement.MediaOpened += OnMediaOpened;
-            mediaElement.PositionChanged += OnPositionChanged;
-
+            
             _progressTimer?.Start();
+        }
+        
+        public void UpdateStream(string streamUrl, string channelName)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                LoadStream(streamUrl, channelName);
+            });
         }
 
         private void OnMediaOpened(object? sender, EventArgs e)
@@ -136,7 +148,6 @@ namespace M3UManager.Views
             {
                 mediaElement?.Play();
             }
-            ResetControlsTimer();
         }
 
         private void OnRewind10Clicked(object? sender, EventArgs e)
@@ -146,7 +157,6 @@ namespace M3UManager.Views
             var newPosition = mediaElement.Position - TimeSpan.FromSeconds(10);
             if (newPosition < TimeSpan.Zero) newPosition = TimeSpan.Zero;
             mediaElement.SeekTo(newPosition);
-            ResetControlsTimer();
         }
 
         private void OnForward10Clicked(object? sender, EventArgs e)
@@ -156,7 +166,6 @@ namespace M3UManager.Views
             var newPosition = mediaElement.Position + TimeSpan.FromSeconds(10);
             if (newPosition > mediaElement.Duration) newPosition = mediaElement.Duration;
             mediaElement.SeekTo(newPosition);
-            ResetControlsTimer();
         }
 
         private void OnVolumeClicked(object? sender, EventArgs e)
@@ -165,7 +174,6 @@ namespace M3UManager.Views
 
             mediaElement.ShouldMute = !mediaElement.ShouldMute;
             volumeButton.Text = mediaElement.ShouldMute ? "🔇" : "🔊";
-            ResetControlsTimer();
         }
 
         private void OnExpandClicked(object? sender, EventArgs e)
@@ -189,16 +197,8 @@ namespace M3UManager.Views
 
         private void OnPlayerTapped(object? sender, TappedEventArgs e)
         {
-            controlsOverlay.IsVisible = !controlsOverlay.IsVisible;
-
-            if (controlsOverlay.IsVisible)
-            {
-                ResetControlsTimer();
-            }
-            else
-            {
-                _controlsTimer?.Stop();
-            }
+            // In PIP mode, controls are always visible, so tapping toggles play/pause
+            OnPlayPauseClicked(sender, e);
         }
 
         private void OnDragHandlePan(object? sender, PanUpdatedEventArgs e)
@@ -228,12 +228,6 @@ namespace M3UManager.Views
             }
         }
 
-        private void ResetControlsTimer()
-        {
-            _controlsTimer?.Stop();
-            _controlsTimer?.Start();
-        }
-
         private string FormatTime(TimeSpan time)
         {
             if (time.TotalHours >= 1)
@@ -247,9 +241,7 @@ namespace M3UManager.Views
         {
             try
             {
-                // Stop and dispose timers
-                _controlsTimer?.Stop();
-                _controlsTimer?.Dispose();
+                // Stop and dispose progress timer
                 _progressTimer?.Stop();
                 _progressTimer?.Dispose();
                 

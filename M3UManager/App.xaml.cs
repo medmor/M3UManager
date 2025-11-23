@@ -9,7 +9,9 @@ public partial class App : Application
     private readonly IFavoritesService favoritesService;
     private readonly IMediaPlayerService mediaPlayerService;
     private Window? currentPipWindow;
-    private readonly List<Window> currentPlayerWindows = new();
+    private PipWindow? currentPipPage;
+    private Window? currentPlayerWindow;
+    private PlayerWindow? currentPlayerPage;
     
     public App(IFavoritesService favoritesService, IMediaPlayerService mediaPlayerService)
     {
@@ -20,153 +22,152 @@ public partial class App : Application
         this.favoritesService = favoritesService;
         this.mediaPlayerService = mediaPlayerService;
         
-        // Register the player window factory
+        // Register the player window factory - reuses existing window
         mediaPlayerService.RegisterWindowFactory(async (streamUrl, channelName) =>
         {
-            // Close any existing PiP window when opening normal player
+            // Close PiP if it's open
             if (currentPipWindow != null)
             {
-                // Cleanup the PiP window before closing
-                if (currentPipWindow.Page is PipWindow oldPipWindow)
-                {
-                    oldPipWindow.Cleanup();
-                }
+                currentPipPage?.Cleanup();
                 Application.Current?.CloseWindow(currentPipWindow);
                 currentPipWindow = null;
+                currentPipPage = null;
             }
             
-            // Close all other player windows
-            foreach (var playerWin in currentPlayerWindows.ToList())
+            // Reuse existing player window or create new one
+            if (currentPlayerWindow != null && currentPlayerPage != null)
             {
-                Application.Current?.CloseWindow(playerWin);
+                // Update existing window with new stream
+                currentPlayerPage.UpdateStream(streamUrl, channelName);
+                currentPlayerWindow.Title = channelName;
+                
+                // Bring window to front
+                if (currentPlayerWindow.Handler?.PlatformView is Microsoft.UI.Xaml.Window nativeWindow)
+                {
+                    nativeWindow.Activate();
+                }
             }
-            currentPlayerWindows.Clear();
-            
-            var playerWindow = new PlayerWindow(streamUrl, channelName);
-            
-            // Create a new independent window
-            var newWindow = new Window(playerWindow)
+            else
             {
-                Title = "Media Player",
-                Width = 850,
-                Height = 650,
-                X = 100,
-                Y = 100
-            };
-            
-            // Track the window
-            currentPlayerWindows.Add(newWindow);
-            newWindow.Destroying += (s, e) => currentPlayerWindows.Remove(newWindow);
-            
-            Application.Current?.OpenWindow(newWindow);
+                // Create new player window
+                currentPlayerPage = new PlayerWindow(streamUrl, channelName);
+                currentPlayerWindow = new Window(currentPlayerPage)
+                {
+                    Title = channelName,
+                    Width = 850,
+                    Height = 650,
+                    X = 100,
+                    Y = 100
+                };
+                
+                currentPlayerWindow.Destroying += (s, e) =>
+                {
+                    currentPlayerWindow = null;
+                    currentPlayerPage = null;
+                };
+                
+                Application.Current?.OpenWindow(currentPlayerWindow);
+            }
             
             await Task.CompletedTask;
         });
 
-        // Register the PiP player factory - creates system-level floating window
+        // Register the PiP player factory - reuses existing window
         mediaPlayerService.RegisterPipFactory(async (streamUrl, channelName) =>
         {
-            // Close all other player windows when opening PiP
-            foreach (var playerWin in currentPlayerWindows.ToList())
+            // Close normal player if it's open
+            if (currentPlayerWindow != null)
             {
-                Application.Current?.CloseWindow(playerWin);
+                Application.Current?.CloseWindow(currentPlayerWindow);
+                currentPlayerWindow = null;
+                currentPlayerPage = null;
             }
-            currentPlayerWindows.Clear();
             
-            // Close any existing PiP window first and cleanup
-            if (currentPipWindow != null)
+            // Reuse existing PiP window or create new one
+            if (currentPipWindow != null && currentPipPage != null)
             {
-                // Cleanup the PiP window before closing
-                if (currentPipWindow.Page is PipWindow oldPipWindow)
+                // Update existing PiP with new stream
+                currentPipPage.UpdateStream(streamUrl, channelName);
+                currentPipWindow.Title = channelName;
+                
+                // Bring window to front and ensure it's topmost
+                if (currentPipWindow.Handler?.PlatformView is Microsoft.UI.Xaml.Window nativeWindow)
                 {
-                    oldPipWindow.Cleanup();
+                    nativeWindow.Activate();
                 }
-                Application.Current?.CloseWindow(currentPipWindow);
-                currentPipWindow = null;
+                SetWindowAlwaysOnTop(currentPipWindow);
             }
-            
-            var pipWindow = new PipWindow();
-            pipWindow.LoadStream(streamUrl, channelName);
-            
-            // Create a compact window for PIP
-            var pipWin = new Window(pipWindow)
+            else
             {
-                Title = channelName,
-                Width = 400,
-                Height = 280,
-                X = 100,
-                Y = 100
-            };
-            
-            // Handle expand request - open full player and close PIP
-            pipWindow.ExpandRequested += async (s, e) =>
-            {
-                // Close PiP when expanding
-                if (currentPipWindow != null)
+                // Create new PiP window
+                currentPipPage = new PipWindow();
+                currentPipPage.LoadStream(streamUrl, channelName);
+                
+                currentPipWindow = new Window(currentPipPage)
                 {
-                    // Cleanup before closing
-                    if (currentPipWindow.Page is PipWindow closingPipWindow)
+                    Title = channelName,
+                    Width = 400,
+                    Height = 280,
+                    X = 100,
+                    Y = 100
+                };
+                
+                // Handle expand request - open full player and close PIP
+                currentPipPage.ExpandRequested += async (s, e) =>
+                {
+                    if (currentPipWindow != null)
                     {
-                        closingPipWindow.Cleanup();
+                        currentPipPage?.Cleanup();
+                        Application.Current?.CloseWindow(currentPipWindow);
+                        currentPipWindow = null;
+                        currentPipPage = null;
                     }
-                    Application.Current?.CloseWindow(currentPipWindow);
+                    
+                    // Open in normal player instead
+                    await mediaPlayerService.OpenPlayerWindow(streamUrl, channelName);
+                };
+                
+                currentPipWindow.Destroying += (s, e) =>
+                {
+                    currentPipPage?.Cleanup();
                     currentPipWindow = null;
-                }
-                
-                var playerWindow = new PlayerWindow(streamUrl, channelName);
-                var fullWindow = new Window(playerWindow)
-                {
-                    Title = "Media Player",
-                    Width = 850,
-                    Height = 650
+                    currentPipPage = null;
                 };
                 
-                // Track the new player window
-                currentPlayerWindows.Add(fullWindow);
-                fullWindow.Destroying += (s, e) => currentPlayerWindows.Remove(fullWindow);
+                Application.Current?.OpenWindow(currentPipWindow);
                 
-                Application.Current?.OpenWindow(fullWindow);
-            };
-            
-            // Track the PiP window
-            currentPipWindow = pipWin;
-            
-            // Clear reference and cleanup when window is destroyed
-            pipWin.Destroying += (s, e) =>
-            {
-                pipWindow.Cleanup();
-                currentPipWindow = null;
-            };
-            
-            Application.Current?.OpenWindow(pipWin);
-            
-            // Set always on top for Windows platform - multiple attempts to ensure it works
-            pipWin.Created += async (s, e) =>
-            {
-                await Task.Delay(100);
-                SetWindowAlwaysOnTop(pipWin);
-                
-                // Try again after another delay
-                await Task.Delay(200);
-                SetWindowAlwaysOnTop(pipWin);
-            };
-            
-            // Also set on activated to maintain topmost status
-            pipWin.Activated += (s, e) => SetWindowAlwaysOnTop(pipWin);
-            
-            // Reapply topmost when main window gets focus to ensure PiP stays above it
-            if (Windows.Count > 0)
-            {
-                var mainWindow = Windows[0];
-                mainWindow.Activated += (s, e) =>
+                // Set always on top - multiple attempts
+                currentPipWindow.Created += async (s, e) =>
                 {
-                    // Small delay then reapply topmost to PiP
-                    Task.Run(async () =>
+                    await Task.Delay(100);
+                    SetWindowAlwaysOnTop(currentPipWindow);
+                    
+                    await Task.Delay(200);
+                    SetWindowAlwaysOnTop(currentPipWindow);
+                };
+                
+                // Maintain topmost status
+                currentPipWindow.Activated += (s, e) => SetWindowAlwaysOnTop(currentPipWindow);
+                
+                // Reapply topmost when main window gets focus
+                if (Windows.Count > 0)
+                {
+                    var mainWindow = Windows[0];
+                    mainWindow.Activated += (s, e) =>
                     {
-                        await Task.Delay(50);
-                        MainThread.BeginInvokeOnMainThread(() => SetWindowAlwaysOnTop(pipWin));
-                    });
-                };
+                        Task.Run(async () =>
+                        {
+                            await Task.Delay(50);
+                            MainThread.BeginInvokeOnMainThread(() =>
+                            {
+                                if (currentPipWindow != null)
+                                {
+                                    SetWindowAlwaysOnTop(currentPipWindow);
+                                }
+                            });
+                        });
+                    };
+                }
             }
             
             await Task.CompletedTask;
@@ -248,12 +249,17 @@ public partial class App : Application
                 currentPipWindow = null;
             }
             
-            // Close all player windows when main window closes
-            foreach (var playerWin in currentPlayerWindows.ToList())
+            // Close player window when main window closes
+            if (currentPlayerWindow != null)
             {
-                Application.Current?.CloseWindow(playerWin);
+                if (currentPlayerPage != null)
+                {
+                    currentPlayerPage.Cleanup();
+                }
+                Application.Current?.CloseWindow(currentPlayerWindow);
+                currentPlayerWindow = null;
+                currentPlayerPage = null;
             }
-            currentPlayerWindows.Clear();
         };
 
         return window;
