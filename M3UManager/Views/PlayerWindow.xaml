@@ -18,8 +18,8 @@
                               ShouldAutoPlay="True"
                               ShouldKeepScreenOn="True"
                               BackgroundColor="Black"
-                              HeightRequest="600"
-                              WidthRequest="800" />
+                              HorizontalOptions="Fill"
+                              VerticalOptions="Fill" />
 
         <!-- Custom Playback Controls Overlay -->
         <Grid Grid.Row="0"
