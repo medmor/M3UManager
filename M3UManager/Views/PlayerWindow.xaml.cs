@@ -11,7 +11,9 @@ namespace M3UManager.Views
         private bool _isPlaying = true;
         private bool _isSeeking = false;
         private System.Timers.Timer? _progressTimer;
-        private System.Timers.Timer? _controlsTimer;
+        private System.Timers.Timer? _hideControlsTimer;
+        private bool _isPointerInside = false;
+        private Point _lastPointerPosition = new Point(-1, -1);
 
         public PlayerWindow(string streamUrl, string channelName)
         {
@@ -33,13 +35,11 @@ namespace M3UManager.Views
             _progressTimer.Elapsed += UpdateProgressUI;
             _progressTimer.Start();
 
-            // Setup controls auto-hide timer
-            _controlsTimer = new System.Timers.Timer(3000); // 3 seconds
-            _controlsTimer.Elapsed += (s, e) => MainThread.BeginInvokeOnMainThread(() =>
-            {
-                controlsOverlay.IsVisible = false;
-            });
-            _controlsTimer.Start();
+            // Setup controls auto-hide timer (5 seconds)
+            _hideControlsTimer = new System.Timers.Timer(5000);
+            _hideControlsTimer.Elapsed += HideControlsTimerElapsed;
+            _hideControlsTimer.AutoReset = false;
+            _hideControlsTimer.Start();
 
             // Add keyboard event handler
             this.Loaded += OnPageLoaded;
@@ -290,19 +290,73 @@ namespace M3UManager.Views
             ResetControlsTimer();
         }
 
-        private void OnPlayerTapped(object? sender, TappedEventArgs e)
+        private void OnPointerEntered(object? sender, PointerEventArgs e)
         {
-            // Toggle controls visibility
-            controlsOverlay.IsVisible = !controlsOverlay.IsVisible;
+            var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+            System.Diagnostics.Debug.WriteLine($"[{timestamp}] [PlayerWindow] PointerEntered - _isPointerInside was: {_isPointerInside}, Opacity: {controlsOverlay.Opacity}");
+            _isPointerInside = true;
+            _lastPointerPosition = e.GetPosition((View?)sender) ?? new Point(-1, -1);
+            ShowControls();
+            StartHideControlsTimer();
+        }
+
+        private void OnPointerExited(object? sender, PointerEventArgs e)
+        {
+            var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+            System.Diagnostics.Debug.WriteLine($"[{timestamp}] [PlayerWindow] PointerExited - _isPointerInside was: {_isPointerInside}, Opacity: {controlsOverlay.Opacity}");
+            _isPointerInside = false;
+            StartHideControlsTimer();
+        }
+
+        private void OnPointerMoved(object? sender, PointerEventArgs e)
+        {
+            if (_isPointerInside)
+            {
+                var currentPosition = e.GetPosition((View?)sender) ?? new Point(-1, -1);
+                
+                // Check if there's actual movement (threshold of 5 pixels to avoid micro-movements)
+                var deltaX = Math.Abs(currentPosition.X - _lastPointerPosition.X);
+                var deltaY = Math.Abs(currentPosition.Y - _lastPointerPosition.Y);
+                
+                if (deltaX > 5 || deltaY > 5)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[PlayerWindow] PointerMoved - Actual movement detected (delta: {deltaX:F1}, {deltaY:F1}) - Showing controls and resetting timer");
+                    _lastPointerPosition = currentPosition;
+                    ShowControls();
+                    StartHideControlsTimer();
+                }
+            }
+        }
+
+        private void ShowControls()
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (controlsOverlay.Opacity < 1)
+                {
+                    var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+                    System.Diagnostics.Debug.WriteLine($"[{timestamp}] [PlayerWindow] ShowControls - Changing opacity from {controlsOverlay.Opacity} to 1");
+                }
+                controlsOverlay.Opacity = 1;
+            });
+        }
+
+        private void StartHideControlsTimer()
+        {
+            System.Diagnostics.Debug.WriteLine("[PlayerWindow] StartHideControlsTimer - Timer restarted (5 seconds)");
+            _hideControlsTimer?.Stop();
+            _hideControlsTimer?.Start();
+        }
+
+        private void HideControlsTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
+        {
+            var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+            System.Diagnostics.Debug.WriteLine($"[{timestamp}] [PlayerWindow] HideControlsTimerElapsed - _isPointerInside: {_isPointerInside}, Current opacity: {controlsOverlay.Opacity}");
             
-            if (controlsOverlay.IsVisible)
+            MainThread.BeginInvokeOnMainThread(() =>
             {
-                ResetControlsTimer();
-            }
-            else
-            {
-                _controlsTimer?.Stop();
-            }
+                controlsOverlay.Opacity = 0;
+            });
         }
 
         private void UpdatePlayPauseButton()
@@ -322,8 +376,7 @@ namespace M3UManager.Views
 
         private void ResetControlsTimer()
         {
-            _controlsTimer?.Stop();
-            _controlsTimer?.Start();
+            StartHideControlsTimer();
         }
 
         private string FormatTime(TimeSpan time)
@@ -352,8 +405,8 @@ namespace M3UManager.Views
             // Cleanup timers
             _progressTimer?.Stop();
             _progressTimer?.Dispose();
-            _controlsTimer?.Stop();
-            _controlsTimer?.Dispose();
+            _hideControlsTimer?.Stop();
+            _hideControlsTimer?.Dispose();
 
             // Stop and dispose media
             mediaElement.Stop();
@@ -372,8 +425,8 @@ namespace M3UManager.Views
             // Stop and cleanup timers
             _progressTimer?.Stop();
             _progressTimer?.Dispose();
-            _controlsTimer?.Stop();
-            _controlsTimer?.Dispose();
+            _hideControlsTimer?.Stop();
+            _hideControlsTimer?.Dispose();
             
             // Stop media playback
             mediaElement.Stop();

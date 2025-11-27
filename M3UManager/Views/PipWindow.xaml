@@ -30,138 +30,219 @@
             <!-- Custom Controls Overlay -->
             <Grid Grid.Row="0" 
                   x:Name="controlsOverlay"
-                  BackgroundColor="#80000000"
-                  IsVisible="True"
-                  Padding="10">
+                  IsVisible="True">
+                <Grid.GestureRecognizers>
+                    <PointerGestureRecognizer PointerMoved="OnPointerMoved" 
+                                             PointerEntered="OnPointerEntered"
+                                             PointerExited="OnPointerExited" />
+                </Grid.GestureRecognizers>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
+                <!-- Gradient Background -->
+                <BoxView Grid.RowSpan="3"
+                         Opacity="0.9">
+                    <BoxView.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#DD000000" Offset="0.0" />
+                            <GradientStop Color="#AA000000" Offset="0.5" />
+                            <GradientStop Color="#DD000000" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </BoxView.Background>
+                </BoxView>
+
                 <!-- Top Bar with Channel Name -->
-                <Label Grid.Row="0"
-                       x:Name="channelNameLabel"
-                       Text="Channel Name"
-                       TextColor="White"
-                       FontSize="14"
-                       FontAttributes="Bold"
-                       Margin="0,0,0,5" />
+                <Border Grid.Row="0"
+                        BackgroundColor="#33FFFFFF"
+                        StrokeThickness="0"
+                        Padding="12,8"
+                        Margin="8,8,8,0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Label x:Name="channelNameLabel"
+                           Text="Channel Name"
+                           TextColor="White"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center" />
+                </Border>
 
                 <!-- Center Play/Pause Button -->
-                <Button Grid.Row="1"
-                        x:Name="playPauseButton"
-                        BackgroundColor="Transparent"
-                        TextColor="White"
-                        FontSize="40"
-                        Text="⏸"
-                        Clicked="OnPlayPauseClicked"
-                        WidthRequest="50"
-                        HeightRequest="50"
+                <Border Grid.Row="1"
+                        BackgroundColor="#55FFFFFF"
+                        StrokeThickness="0"
+                        WidthRequest="60"
+                        HeightRequest="60"
                         HorizontalOptions="Center"
-                        VerticalOptions="Center" />
+                        VerticalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="30" />
+                    </Border.StrokeShape>
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.6" Radius="10" Offset="0,2" />
+                    </Border.Shadow>
+                    <Button x:Name="playPauseButton"
+                            BackgroundColor="Transparent"
+                            TextColor="White"
+                            FontSize="32"
+                            Text="⏸"
+                            Clicked="OnPlayPauseClicked"
+                            WidthRequest="60"
+                            HeightRequest="60"
+                            Padding="0"
+                            BorderWidth="0" />
+                </Border>
 
                 <!-- Bottom Controls -->
-                <Grid Grid.Row="2">
+                <Grid Grid.Row="2" Margin="8,0,8,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <!-- Progress Bar -->
-                    <Grid Grid.Row="0" Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                    <Border Grid.Row="0" 
+                            BackgroundColor="#22FFFFFF"
+                            Padding="10,6"
+                            Margin="0,0,0,8">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="6" />
+                        </Border.StrokeShape>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
 
-                        <Label Grid.Column="0"
-                               x:Name="currentTimeLabel"
-                               Text="00:00"
-                               TextColor="White"
-                               FontSize="10"
-                               VerticalOptions="Center"
-                               Margin="0,0,5,0" />
+                            <Label Grid.Column="0"
+                                   x:Name="currentTimeLabel"
+                                   Text="00:00"
+                                   TextColor="White"
+                                   FontSize="11"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"
+                                   Margin="0,0,8,0" />
 
-                        <Slider Grid.Column="1"
-                                x:Name="progressSlider"
-                                Minimum="0"
-                                Maximum="100"
-                                Value="0"
-                                ThumbColor="White"
-                                MinimumTrackColor="#E50914"
-                                MaximumTrackColor="#4A4A4A"
-                                DragStarted="OnProgressDragStarted"
-                                ValueChanged="OnProgressChanged"
-                                DragCompleted="OnProgressDragCompleted" />
+                            <Slider Grid.Column="1"
+                                    x:Name="progressSlider"
+                                    Minimum="0"
+                                    Maximum="100"
+                                    Value="0"
+                                    ThumbColor="White"
+                                    MinimumTrackColor="#007ACC"
+                                    MaximumTrackColor="#555555"
+                                    DragStarted="OnProgressDragStarted"
+                                    ValueChanged="OnProgressChanged"
+                                    DragCompleted="OnProgressDragCompleted" />
 
-                        <Label Grid.Column="2"
-                               x:Name="durationLabel"
-                               Text="00:00"
-                               TextColor="White"
-                               FontSize="10"
-                               VerticalOptions="Center"
-                               Margin="5,0,0,0" />
-                    </Grid>
+                            <Label Grid.Column="2"
+                                   x:Name="durationLabel"
+                                   Text="00:00"
+                                   TextColor="White"
+                                   FontSize="11"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"
+                                   Margin="8,0,0,0" />
+                        </Grid>
+                    </Border>
 
                     <!-- Control Buttons -->
                     <HorizontalStackLayout Grid.Row="1"
                                           HorizontalOptions="Center"
-                                          Spacing="8">
+                                          Spacing="6">
                         
-                        <Button Text="⏪"
-                                BackgroundColor="Transparent"
-                                TextColor="White"
-                                FontSize="14"
-                                Clicked="OnRewind10Clicked"
-                                WidthRequest="30"
-                                HeightRequest="30"
-                                Padding="0" />
+                        <Border BackgroundColor="#44FFFFFF"
+                                StrokeThickness="0"
+                                Padding="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="6" />
+                            </Border.StrokeShape>
+                            <Button Text="⏪"
+                                    BackgroundColor="Transparent"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    Clicked="OnRewind10Clicked"
+                                    WidthRequest="36"
+                                    HeightRequest="36"
+                                    Padding="0"
+                                    BorderWidth="0" />
+                        </Border>
 
-                        <Button Text="⏩"
-                                BackgroundColor="Transparent"
-                                TextColor="White"
-                                FontSize="14"
-                                Clicked="OnForward10Clicked"
-                                WidthRequest="30"
-                                HeightRequest="30"
-                                Padding="0" />
+                        <Border BackgroundColor="#44FFFFFF"
+                                StrokeThickness="0"
+                                Padding="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="6" />
+                            </Border.StrokeShape>
+                            <Button Text="⏩"
+                                    BackgroundColor="Transparent"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    Clicked="OnForward10Clicked"
+                                    WidthRequest="36"
+                                    HeightRequest="36"
+                                    Padding="0"
+                                    BorderWidth="0" />
+                        </Border>
 
-                        <Button x:Name="volumeButton"
-                                Text="🔊"
-                                BackgroundColor="Transparent"
-                                TextColor="White"
-                                FontSize="14"
-                                Clicked="OnVolumeClicked"
-                                WidthRequest="30"
-                                HeightRequest="30"
-                                Padding="0" />
+                        <Border BackgroundColor="#44FFFFFF"
+                                StrokeThickness="0"
+                                Padding="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="6" />
+                            </Border.StrokeShape>
+                            <Button x:Name="volumeButton"
+                                    Text="🔊"
+                                    BackgroundColor="Transparent"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    Clicked="OnVolumeClicked"
+                                    WidthRequest="36"
+                                    HeightRequest="36"
+                                    Padding="0"
+                                    BorderWidth="0" />
+                        </Border>
 
-                        <Button Text="⛶"
-                                BackgroundColor="Transparent"
-                                TextColor="White"
-                                FontSize="14"
-                                Clicked="OnExpandClicked"
-                                WidthRequest="30"
-                                HeightRequest="30"
-                                Padding="0" />
+                        <Border BackgroundColor="#44007ACC"
+                                StrokeThickness="0"
+                                Padding="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="6" />
+                            </Border.StrokeShape>
+                            <Button Text="⛶"
+                                    BackgroundColor="Transparent"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    Clicked="OnExpandClicked"
+                                    WidthRequest="36"
+                                    HeightRequest="36"
+                                    Padding="0"
+                                    BorderWidth="0" />
+                        </Border>
 
-                        <Button Text="✕"
-                                BackgroundColor="#DC3545"
-                                TextColor="White"
-                                FontSize="14"
-                                Clicked="OnCloseClicked"
-                                WidthRequest="30"
-                                HeightRequest="30"
-                                Padding="0" />
+                        <Border BackgroundColor="#DC3545"
+                                StrokeThickness="0"
+                                Padding="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="6" />
+                            </Border.StrokeShape>
+                            <Button Text="✕"
+                                    BackgroundColor="Transparent"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    Clicked="OnCloseClicked"
+                                    WidthRequest="36"
+                                    HeightRequest="36"
+                                    Padding="0"
+                                    BorderWidth="0" />
+                        </Border>
                     </HorizontalStackLayout>
                 </Grid>
-
-                <!-- Tap to show/hide controls -->
-                <Grid.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnPlayerTapped" />
-                </Grid.GestureRecognizers>
             </Grid>
 
             <!-- Drag Handle Bar -->

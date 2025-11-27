@@ -9,6 +9,9 @@ namespace M3UManager.Views
         private bool _isPlaying = true;
         private bool _isSeeking = false;
         private System.Timers.Timer? _progressTimer;
+        private System.Timers.Timer? _hideControlsTimer;
+        private bool _isPointerInside = false;
+        private Point _lastPointerPosition = new Point(-1, -1);
 
         public event EventHandler? ExpandRequested;
         public event EventHandler? WindowClosed;
@@ -17,12 +20,18 @@ namespace M3UManager.Views
         {
             InitializeComponent();
 
-            // Don't auto-hide controls in PIP mode - window is small, controls should stay visible
+            // Initially show controls
             controlsOverlay.IsVisible = true;
 
             // Setup progress update timer
             _progressTimer = new System.Timers.Timer(500);
             _progressTimer.Elapsed += UpdateProgressUI;
+            
+            // Setup auto-hide controls timer (5 seconds)
+            _hideControlsTimer = new System.Timers.Timer(5000);
+            _hideControlsTimer.Elapsed += HideControlsTimerElapsed;
+            _hideControlsTimer.AutoReset = false; // Only fire once
+            _hideControlsTimer.Start(); // Start the timer on initialization
             
             // Cleanup when page is disappearing
             this.Unloaded += (s, e) => Cleanup();
@@ -195,10 +204,71 @@ namespace M3UManager.Views
             }
         }
 
-        private void OnPlayerTapped(object? sender, TappedEventArgs e)
+        private void OnPointerEntered(object? sender, PointerEventArgs e)
         {
-            // In PIP mode, controls are always visible, so tapping toggles play/pause
-            OnPlayPauseClicked(sender, e);
+            System.Diagnostics.Debug.WriteLine("[PipWindow] PointerEntered - Showing controls");
+            _isPointerInside = true;
+            _lastPointerPosition = e.GetPosition((View?)sender) ?? new Point(-1, -1);
+            ShowControls();
+            StartHideControlsTimer();
+        }
+
+        private void OnPointerExited(object? sender, PointerEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("[PipWindow] PointerExited - Starting hide timer");
+            _isPointerInside = false;
+            StartHideControlsTimer();
+        }
+
+        private void OnPointerMoved(object? sender, PointerEventArgs e)
+        {
+            if (_isPointerInside)
+            {
+                var currentPosition = e.GetPosition((View?)sender) ?? new Point(-1, -1);
+                
+                // Check if there's actual movement (threshold of 5 pixels to avoid micro-movements)
+                var deltaX = Math.Abs(currentPosition.X - _lastPointerPosition.X);
+                var deltaY = Math.Abs(currentPosition.Y - _lastPointerPosition.Y);
+                
+                if (deltaX > 5 || deltaY > 5)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[PipWindow] PointerMoved - Actual movement detected (delta: {deltaX:F1}, {deltaY:F1}) - Showing controls and resetting timer");
+                    _lastPointerPosition = currentPosition;
+                    ShowControls();
+                    StartHideControlsTimer();
+                }
+            }
+        }
+
+        private void ShowControls()
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (controlsOverlay.Opacity < 1)
+                {
+                    var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+                    System.Diagnostics.Debug.WriteLine($"[{timestamp}] [PipWindow] ShowControls - Changing opacity from {controlsOverlay.Opacity} to 1");
+                }
+                controlsOverlay.Opacity = 1;
+            });
+        }
+
+        private void StartHideControlsTimer()
+        {
+            System.Diagnostics.Debug.WriteLine("[PipWindow] StartHideControlsTimer - Timer restarted (5 seconds)");
+            _hideControlsTimer?.Stop();
+            _hideControlsTimer?.Start();
+        }
+
+        private void HideControlsTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
+        {
+            var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+            System.Diagnostics.Debug.WriteLine($"[{timestamp}] [PipWindow] HideControlsTimerElapsed - _isPointerInside: {_isPointerInside}, Current opacity: {controlsOverlay.Opacity}");
+            
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                controlsOverlay.Opacity = 0;
+            });
         }
 
         private void OnDragHandlePan(object? sender, PanUpdatedEventArgs e)
@@ -244,6 +314,10 @@ namespace M3UManager.Views
                 // Stop and dispose progress timer
                 _progressTimer?.Stop();
                 _progressTimer?.Dispose();
+                
+                // Stop and dispose hide controls timer
+                _hideControlsTimer?.Stop();
+                _hideControlsTimer?.Dispose();
                 
                 // Stop media playback
                 if (mediaElement != null)

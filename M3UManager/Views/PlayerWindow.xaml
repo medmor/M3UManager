@@ -25,6 +25,11 @@
         <Grid Grid.Row="0"
               x:Name="controlsOverlay"
               IsVisible="True">
+            <Grid.GestureRecognizers>
+                <PointerGestureRecognizer PointerMoved="OnPointerMoved" 
+                                         PointerEntered="OnPointerEntered"
+                                         PointerExited="OnPointerExited" />
+            </Grid.GestureRecognizers>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -275,11 +280,6 @@
                     </Border>
                 </Grid>
             </StackLayout>
-
-            <!-- Tap to show/hide controls -->
-            <Grid.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnPlayerTapped" />
-            </Grid.GestureRecognizers>
         </Grid>
 
         <!-- Bottom Info Panel -->
