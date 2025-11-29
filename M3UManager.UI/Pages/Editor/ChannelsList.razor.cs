@@ -22,6 +22,8 @@ namespace M3UManager.UI.Pages.Editor
         private ChannelsDisplay? channelsDisplay;
         private SeriesEpisodesViewer? episodesViewer;
         private bool showEpisodes = false;
+        private bool showCategorySelector = false;
+        private M3UChannel? selectedChannelForCategories;
 
         public void OnGroupChanged(List<M3UChannel> channels)
         {
@@ -127,13 +129,46 @@ namespace M3UManager.UI.Pages.Editor
         {
             if (IsChannelInFavorite(channel))
             {
-                favoritesService.RemoveChannelFromFavorites(channel);
+                // Remove from all categories
+                var categories = favoritesService.GetCategories();
+                foreach (var category in categories)
+                {
+                    if (favoritesService.IsChannelInCategory(category.Id, channel))
+                    {
+                        favoritesService.RemoveChannelFromCategory(category.Id, channel);
+                    }
+                }
+                favoritesService.SaveCategories();
+                StateHasChanged();
             }
             else
             {
-                favoritesService.AddChannelToFavory(channel);
+                // Show category selector modal
+                selectedChannelForCategories = channel;
+                showCategorySelector = true;
+                StateHasChanged();
             }
-            favoritesService.SaveFavoritesListString();
+        }
+
+        private async Task OnCategoriesSelected(List<string> categoryIds)
+        {
+            if (selectedChannelForCategories != null)
+            {
+                foreach (var categoryId in categoryIds)
+                {
+                    favoritesService.AddChannelToCategory(categoryId, selectedChannelForCategories);
+                }
+                favoritesService.SaveCategories();
+                StateHasChanged();
+            }
+        }
+
+        private Task CloseCategorySelector()
+        {
+            showCategorySelector = false;
+            selectedChannelForCategories = null;
+            StateHasChanged();
+            return Task.CompletedTask;
         }
 
         private void RemoveChannel(M3UChannel channel)
@@ -154,7 +189,9 @@ namespace M3UManager.UI.Pages.Editor
 
         private bool IsChannelInFavorite(M3UChannel channel)
         {
-            return favoritesService.IsChannelInFavorites(channel);
+            // Check if channel is in any category
+            var categories = favoritesService.GetCategories();
+            return categories.Any(c => favoritesService.IsChannelInCategory(c.Id, channel));
         }
     }
 }

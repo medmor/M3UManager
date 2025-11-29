@@ -45,7 +45,7 @@
                     {
                         <button class="btn @(IsChannelFavorite?.Invoke(SelectedChannel) == true ? "btn-warning" : "btn-outline-warning")" 
                                 @onclick="() => OnToggleFavorite.InvokeAsync(SelectedChannel)" 
-                                title="@(IsChannelFavorite?.Invoke(SelectedChannel) == true ? "Remove from favorites" : "Add to favorites")">
+                                title="@(IsChannelFavorite?.Invoke(SelectedChannel) == true ? "Remove from all categories" : "Choose categories...")">
                             <i class="bi bi-star@(IsChannelFavorite?.Invoke(SelectedChannel) == true ? "-fill" : "")"></i>
                         </button>
                     }

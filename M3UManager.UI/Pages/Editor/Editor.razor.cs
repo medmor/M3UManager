@@ -22,6 +22,7 @@ namespace M3UManager.UI.Pages.Editor
         private string cachedXtreamUrl = string.Empty;
         private DateTime? cachedDate = null;
         private bool isLoading = false;
+        private bool isAutoLoading = false;
         private string errorMessage = string.Empty;
         private VideoPlayer videoPlayer = default!;
 
@@ -42,21 +43,74 @@ namespace M3UManager.UI.Pages.Editor
                 {
                     try
                     {
+                        isAutoLoading = true;
+                        StateHasChanged();
+                        
                         var cache = await fileIO.LoadPlaylistCache();
                         if (cache.playlist != null && cache.playlist.M3UGroups != null && cache.playlist.M3UGroups.Count > 0)
                         {
                             cachedXtreamUrl = cache.xtreamUrl ?? "Unknown";
                             cachedDate = cache.cachedDate;
-                            showCacheDialog = true;
+                            
+                            // Auto-load cached playlist immediately
+                            var currentCount = m3uService.GroupListsCount();
+                            m3uService.AddGroupList(cache.playlist);
+                            
+                            var cmd = new Services.M3UEditorCommands.AddXtreamModelCommand(m3uService, currentCount, cache.xtreamUrl ?? "Cached");
+                            Commands.Add(cmd);
+                            
+                            isAutoLoading = false;
+                            StateHasChanged();
+                            
+                            // Refresh in background if URL is available
+                            if (!string.IsNullOrEmpty(cachedXtreamUrl) && cachedXtreamUrl != "Unknown")
+                            {
+                                _ = Task.Run(async () => await RefreshPlaylistInBackground(currentCount, cachedXtreamUrl));
+                            }
+                        }
+                        else
+                        {
+                            isAutoLoading = false;
+                            StateHasChanged();
                         }
                     }
                     catch (Exception ex)
                     {
                         // Silently handle cache loading errors
+                        isAutoLoading = false;
+                        StateHasChanged();
                     }
-                    
-                    StateHasChanged();
                 }
+            }
+        }
+        
+        private async Task RefreshPlaylistInBackground(int modelIndex, string url)
+        {
+            try
+            {
+                // Wait a bit to let the UI render first
+                await Task.Delay(1000);
+                
+                // Remove the old cached playlist
+                m3uService.RemoveGroupList(modelIndex);
+                
+                // Download fresh playlist (this adds it automatically)
+                await m3uService.AddGroupListFromXtreamAsync(url);
+                
+                // Update cache with the new playlist
+                var newPlaylist = m3uService.GetGroupList(modelIndex);
+                if (newPlaylist != null)
+                {
+                    await fileIO.SavePlaylistCache(newPlaylist, url);
+                }
+                
+                // Update UI
+                await InvokeAsync(() => StateHasChanged());
+            }
+            catch (Exception ex)
+            {
+                // Silently fail - user is already using cached version
+                System.Diagnostics.Debug.WriteLine($"Background refresh failed: {ex.Message}");
             }
         }
         

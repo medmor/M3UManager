@@ -1,0 +1,98 @@
+@page "/Favorites"
+@using M3UManager.UI.Components
+@using M3UManager.Models
+
+<div class="d-flex flex-column h-100">
+    @if (GetTotalFavoritesCount() == 0)
+    {
+        <!-- Empty State -->
+        <div class="d-flex align-items-center justify-content-center h-100">
+            <div class="text-center p-5">
+                <i class="bi bi-star text-muted" style="font-size: 80px;"></i>
+                <h3 class="mt-4 text-muted">No Favorites Yet</h3>
+                <p class="text-muted mb-4">
+                    Add channels to your favorites from the playlist manager to see them here
+                </p>
+                <a href="/editor" class="btn btn-primary btn-lg">
+                    <i class="bi bi-collection-play"></i> Go to Playlist Manager
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Header with Category Tabs -->
+        <div class="border-bottom bg-light">
+            <div class="d-flex align-items-center px-3 py-2">
+                <h5 class="mb-0 me-3">
+                    <i class="bi bi-star-fill text-warning"></i> Favorites
+                </h5>
+                <button class="btn btn-sm btn-outline-primary" @onclick="OpenCategoryManager">
+                    <i class="bi bi-gear"></i> Manage Categories
+                </button>
+                <div class="ms-auto">
+                    <span class="badge bg-warning text-dark">
+                        @GetSelectedCategoryCount() channels
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Category Tabs -->
+            <ul class="nav nav-tabs px-3">
+                @foreach (var category in categories)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @(selectedCategoryId == category.Id ? "active" : "")" 
+                           style="cursor: pointer;" 
+                           @onclick="() => SelectCategory(category.Id)">
+                            <i class="@category.Icon me-1"></i>
+                            @category.Name
+                            <span class="badge @(selectedCategoryId == category.Id ? "bg-primary" : "bg-secondary") ms-1">
+                                @category.Channels.Count
+                            </span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <!-- Channels Display -->
+        <div class="flex-grow-1 p-3 overflow-auto">
+            @if (selectedCategory != null && selectedCategory.Channels.Count > 0)
+            {
+                <ChannelsDisplay @ref="channelsDisplay"
+                               Channels="@selectedCategory.Channels.ToList()"
+                               SelectedChannel="@selectedChannel"
+                               OnChannelSelected="OnChannelSelected"
+                               OnPlay="PlayChannel"
+                               OnPlayPip="PlayChannelPip"
+                               OnToggleFavorite="RemoveFromCategory"
+                               OnShowEpisodes="ShowEpisodes"
+                               IsChannelFavorite="@((channel) => true)"
+                               ShowActions="true"
+                               ShowSearch="true"
+                               InitialViewMode="DisplayMode.Grid" />
+            }
+            else if (selectedCategory != null)
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                    <p class="mt-3">No channels in this category</p>
+                    <p class="small">Add channels from the playlist manager</p>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Category Manager Modal -->
+<CategoryManager IsVisible="showCategoryManager" 
+                OnClose="CloseCategoryManager" 
+                OnCategoriesChanged="OnCategoriesChanged" />
+
+<!-- Series Episodes Viewer -->
+<SeriesEpisodesViewer @ref="episodesViewer"
+                     IsVisible="showEpisodes"
+                     OnClose="CloseEpisodes"
+                     OnEpisodeSelected="PlayEpisode"
+                     UseImageProxy="true" />

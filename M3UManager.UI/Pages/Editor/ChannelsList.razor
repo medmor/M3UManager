@@ -22,6 +22,12 @@
                      OnEpisodeSelected="PlayEpisode"
                      UseImageProxy="true" />
 
+<!-- Category Selector -->
+<CategorySelector IsVisible="showCategorySelector"
+                 Channel="selectedChannelForCategories"
+                 OnClose="CloseCategorySelector"
+                 OnCategoriesSelected="OnCategoriesSelected" />
+
 @for (int i = 0; i < 100; i++)
 {
     <div class="indicator hiden"></div>

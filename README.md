@@ -74,9 +74,9 @@ A modern cross-platform IPTV player and playlist manager built with .NET MAUI an
   - [ ] Enable catch-up TV viewing
 
 #### Favorites Management
-- [ ] **Multiple Favorite Lists**
-  - [ ] Create custom favorite categories
-  - [ ] "Sports", "News", "Movies" default lists
+- [x] **Multiple Favorite Lists**
+  - [x] Create custom favorite categories
+  - [x] "Sports", "News", "Movies" default lists
   - [ ] Drag-and-drop between lists
   
 - [ ] **Favorites Organization**

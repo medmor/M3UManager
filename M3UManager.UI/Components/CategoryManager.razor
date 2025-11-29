@@ -1,0 +1,126 @@
+@using M3UManager.Models
+@using M3UManager.Services.ServicesContracts
+
+<!-- Category Manager Modal -->
+@if (IsVisible)
+{
+    <div class="modal-backdrop show" @onclick="Close"></div>
+    <div class="modal show d-block" tabindex="-1" style="z-index: 1055;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-folder-fill me-2"></i>
+                        Manage Categories
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Add New Category -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">Add New Category</h6>
+                            <div class="row g-2">
+                                <div class="col">
+                                    <input type="text" class="form-control" placeholder="Category name" 
+                                           @bind="newCategoryName" @onkeypress="HandleKeyPress" />
+                                </div>
+                                <div class="col-auto">
+                                    <select class="form-select" @bind="newCategoryIcon">
+                                        <option value="bi-star">⭐ Star</option>
+                                        <option value="bi-trophy-fill">🏆 Trophy</option>
+                                        <option value="bi-newspaper">📰 News</option>
+                                        <option value="bi-film">🎬 Film</option>
+                                        <option value="bi-music-note">🎵 Music</option>
+                                        <option value="bi-tv-fill">📺 TV</option>
+                                        <option value="bi-controller">🎮 Gaming</option>
+                                        <option value="bi-book">📚 Docs</option>
+                                        <option value="bi-heart-fill">❤️ Heart</option>
+                                        <option value="bi-bookmark-fill">🔖 Bookmark</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-primary" @onclick="AddCategory">
+                                        <i class="bi bi-plus-lg"></i> Add
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Categories List -->
+                    <div class="list-group">
+                        @foreach (var category in categories.OrderBy(c => c.SortOrder))
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex align-items-center">
+                                    <!-- Drag Handle -->
+                                    @if (!category.IsDefault)
+                                    {
+                                        <div class="me-2 text-muted" style="cursor: move;">
+                                            <i class="bi bi-grip-vertical"></i>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="me-2" style="width: 16px;"></div>
+                                    }
+
+                                    <!-- Icon -->
+                                    <i class="@category.Icon me-2"></i>
+
+                                    <!-- Name -->
+                                    @if (editingCategoryId == category.Id)
+                                    {
+                                        <input type="text" class="form-control form-control-sm me-2" 
+                                               @bind="editingName" 
+                                               @onkeypress="@((e) => HandleEditKeyPress(e, category.Id))" />
+                                        <button class="btn btn-sm btn-success me-1" @onclick="() => SaveEdit(category.Id)">
+                                            <i class="bi bi-check"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" @onclick="CancelEdit">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="flex-grow-1">
+                                            @category.Name
+                                            @if (category.IsDefault)
+                                            {
+                                                <span class="badge bg-secondary ms-2">Default</span>
+                                            }
+                                        </span>
+                                        <span class="badge bg-primary me-2">@category.Channels.Count</span>
+
+                                        <!-- Actions -->
+                                        @if (!category.IsDefault)
+                                        {
+                                            <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => StartEdit(category.Id, category.Name)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteCategory(category.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    @if (categories.Count == 0)
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-folder-x" style="font-size: 2rem;"></i>
+                            <p class="mt-2">No categories yet. Add one above!</p>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Close">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
