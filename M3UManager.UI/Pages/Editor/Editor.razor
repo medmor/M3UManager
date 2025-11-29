@@ -16,7 +16,7 @@
             </div>
             
             <div class="btn-toolbar gap-2">
-                @if (m3uService.GroupListsCount() == 0)
+                @if (m3uService.GroupListsCount() == 0 && !isAutoLoading)
                 {
                     <div class="btn-group">
                         <button class="btn btn-sm btn-primary" @onclick="ShowXtreamDialog" title="Load from Xtream Codes">
