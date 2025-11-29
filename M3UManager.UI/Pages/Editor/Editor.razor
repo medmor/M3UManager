@@ -16,14 +16,7 @@
             </div>
             
             <div class="btn-toolbar gap-2">
-                @if (Commands.Count() > 0)
-                {
-                    <button class="btn btn-sm btn-outline-secondary" @onclick="Undo" title="Undo last action">
-                        <i class="bi bi-arrow-counterclockwise"></i> Undo
-                    </button>
-                }
-                
-                @if (m3uService.GroupListsCount() < 2)
+                @if (m3uService.GroupListsCount() == 0)
                 {
                     <div class="btn-group">
                         <button class="btn btn-sm btn-primary" @onclick="ShowXtreamDialog" title="Load from Xtream Codes">
@@ -31,21 +24,6 @@
                         </button>
                         <button class="btn btn-sm btn-outline-primary" @onclick="OpenFile" title="Open M3U file">
                             <i class="bi bi-file-earmark-plus"></i> Open File
-                        </button>
-                    </div>
-                }
-                
-                @if (m3uService.GroupListsCount() == 2)
-                {
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-info" @onclick="CompareLists" title="Compare playlists">
-                            <i class="bi bi-signpost-split"></i> Compare
-                        </button>
-                        <button class="btn btn-sm btn-success" @onclick="(()=>CopyToOther(0, 1))" title="Copy selected to left">
-                            <i class="bi bi-arrow-left-circle"></i>
-                        </button>
-                        <button class="btn btn-sm btn-success" @onclick="(()=>CopyToOther(1, 0))" title="Copy selected to right">
-                            <i class="bi bi-arrow-right-circle"></i>
                         </button>
                     </div>
                 }
@@ -87,19 +65,8 @@
                 }
                 else
                 {
-                    <div class="row g-0 h-100">
-                        @if (m3uService.GroupListsCount() > 0)
-                        {
-                            <div class="@(m3uService.GroupListsCount() == 2 ? "col-6" : "col-12") border-end h-100">
-                                <GroupsList M3UListModelId="0"></GroupsList>
-                            </div>
-                        }
-                        @if (m3uService.GroupListsCount() == 2)
-                        {
-                            <div class="col-6 h-100">
-                                <GroupsList M3UListModelId="1"></GroupsList>
-                            </div>
-                        }
+                    <div class="h-100">
+                        <GroupsList M3UListModelId="0"></GroupsList>
                     </div>
                 }
             </CascadingValue>
@@ -173,77 +140,4 @@
         </div>
     </div>
 }
-
-@if (showCacheDialog)
-{
-    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 2000;">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-archive-fill"></i> Cached Playlist Found
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CloseCacheDialog"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i>
-                        <strong>A previously loaded playlist is available</strong>
-                    </div>
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h6 class="card-subtitle mb-2 text-muted">Source URL</h6>
-                            <p class="card-text small text-break mb-3">@cachedXtreamUrl</p>
-                            
-                            @if (cachedDate.HasValue)
-                            {
-                                <h6 class="card-subtitle mb-2 text-muted">Last Updated</h6>
-                                <p class="card-text">
-                                    <i class="bi bi-clock"></i> @cachedDate.Value.ToString("MMM dd, yyyy - hh:mm tt")
-                                    <br/>
-                                    <small class="text-muted">(@GetTimeAgo(cachedDate.Value))</small>
-                                </p>
-                            }
-                        </div>
-                    </div>
-                    <div class="alert alert-warning small mb-0">
-                        <i class="bi bi-exclamation-triangle"></i>
-                        <strong>Note:</strong> Cached data loads instantly but may not include the latest updates.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="CloseCacheDialog">
-                        Cancel
-                    </button>
-                    <button type="button" class="btn btn-outline-primary" @onclick="RefreshFromUrl">
-                        <i class="bi bi-arrow-clockwise"></i> Refresh
-                    </button>
-                    <button type="button" class="btn btn-primary" @onclick="LoadCachedPlaylist">
-                        <i class="bi bi-lightning-fill"></i> Use Cached
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-<VideoPlayer @ref="videoPlayer" />
-
-<div class="row">
-    <CascadingValue Value="this">
-        @if (m3uService.GroupListsCount() > 0)
-        {
-            <div class="col">
-                <GroupsList M3UListModelId="0"></GroupsList>
-            </div>
-        }
-        @if (m3uService.GroupListsCount() == 2)
-        {
-
-            <div class="card col">
-                <GroupsList M3UListModelId="1"></GroupsList>
-            </div>
-        }
-    </CascadingValue>
-</div>
 

@@ -49,12 +49,6 @@
                             <i class="bi bi-star@(IsChannelFavorite?.Invoke(SelectedChannel) == true ? "-fill" : "")"></i>
                         </button>
                     }
-                    @if (OnDelete.HasDelegate)
-                    {
-                        <button class="btn btn-outline-danger" @onclick="() => OnDelete.InvokeAsync(SelectedChannel)" title="Delete channel">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    }
                 </div>
             }
         </div>

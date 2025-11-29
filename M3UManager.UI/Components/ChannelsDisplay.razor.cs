@@ -18,7 +18,6 @@ namespace M3UManager.UI.Components
         [Parameter] public EventCallback<M3UChannel> OnPlay { get; set; }
         [Parameter] public EventCallback<M3UChannel> OnPlayPip { get; set; }
         [Parameter] public EventCallback<M3UChannel> OnToggleFavorite { get; set; }
-        [Parameter] public EventCallback<M3UChannel> OnDelete { get; set; }
         [Parameter] public Func<M3UChannel, bool>? IsChannelFavorite { get; set; }
         [Parameter] public bool ShowSearch { get; set; } = true;
         [Parameter] public bool ShowActions { get; set; } = true;

@@ -46,37 +46,6 @@ namespace M3UManager.UI.Pages.Editor
             return group.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
         }
 
-        async Task SaveList()
-        {
-            try
-            {
-                var groups = m3UService.GetModel(M3UListModelId).M3UGroups;
-                var downloadsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
-                var savePath = Path.Combine(downloadsDir, "channels.m3u");
-                await fileIO.SaveDictionaryAsM3U(groups, downloadsDir);
-                await js.InvokeVoidAsync("alert", $"Save succeeded: {savePath}");
-            }
-            catch (Exception ex)
-            {
-                await js.InvokeVoidAsync("alert", $"Save failed: {ex.Message}");
-            }
-        }
-        async Task DeleteGroups()
-        {
-            var cmd = new Services.M3UEditorCommands.DeleteGroupsFromListCommand(m3UService, M3UListModelId, m3UService.SelectedGroups);
-            cmd.Execute();
-            editor.Commands.Add(cmd);
-            FilterGroups(new ChangeEventArgs() { Value = groupFilterString });
-            await js.InvokeVoidAsync("ChannelList.deselectItems");
-            StateHasChanged();
-        }
-        void RemoveModel()
-        {
-            var cmd = new Services.M3UEditorCommands.RemoveModelCommand(m3UService, M3UListModelId);
-            cmd.Execute();
-            editor.Commands.Add(cmd);
-            editor.Refresh();
-        }
         void OnSelectGroupsInput(ChangeEventArgs args)
         {
             var selected = args.Value as string[];
@@ -115,7 +84,8 @@ namespace M3UManager.UI.Pages.Editor
             }
         }
 
-        bool IsInBoothLists(string gTrimmedName) => m3UService.IsChannelInBothLists(gTrimmedName);
+        // Removed comparison feature - single playlist only
+        bool IsInBoothLists(string gTrimmedName) => false;
 
         private string GetDisplayGroupName(string groupName)
         {

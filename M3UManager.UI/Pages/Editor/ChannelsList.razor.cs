@@ -171,22 +171,6 @@ namespace M3UManager.UI.Pages.Editor
             return Task.CompletedTask;
         }
 
-        private void RemoveChannel(M3UChannel channel)
-        {
-            var cmd = new Services.M3UEditorCommands.DeleteChannelsFromGroupsCommand(
-                m3UService, 
-                M3UListModelId, 
-                new List<M3UChannel> { channel }, 
-                m3UService.SelectedGroups);
-            cmd.Execute();
-            editor.Commands.Add(cmd);
-            
-            if (Channels != null)
-            {
-                OnGroupChanged(Channels.Where(c => c != channel).ToList());
-            }
-        }
-
         private bool IsChannelInFavorite(M3UChannel channel)
         {
             // Check if channel is in any category

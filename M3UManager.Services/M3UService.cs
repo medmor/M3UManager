@@ -8,7 +8,6 @@ namespace M3UManager.Services
     {
         public string[] SelectedGroups { get; set; } = new string[0];
         private readonly List<M3UGroupList> groupLists = new List<M3UGroupList>();
-        private string[] inBothLists = new string[0];
         private readonly IXtreamService _xtreamService;
 
         public M3UService(IXtreamService xtreamService)
@@ -22,17 +21,10 @@ namespace M3UManager.Services
                 .Where(x => groupsNames.Contains(x.Key))
                 .Select(x => x.Value)
                 .ToArray();
-        public void CompareGroupLists()
-        {
-            var dict1Keys = GetModel(0).M3UGroups.Keys;
-            var dict2Keys = GetModel(1).M3UGroups.Keys;
-
-            inBothLists = dict1Keys.Where(x => dict2Keys.Contains(x)).ToArray();
-        }
-        public bool IsChannelInBothLists(string channelTrimmedName) => groupLists.Count > 1 && inBothLists.Contains(channelTrimmedName);
+        
         public void AddGroupList(string m3uString)
         {
-            if (groupLists.Count < 2)
+            if (groupLists.Count < 1)
             {
                 groupLists.Add(new M3UGroupList(m3uString));
             }
@@ -40,7 +32,7 @@ namespace M3UManager.Services
 
         public void AddGroupList(M3UGroupList groupList)
         {
-            if (groupLists.Count < 2)
+            if (groupLists.Count < 1)
             {
                 groupLists.Add(groupList);
             }
@@ -55,7 +47,7 @@ namespace M3UManager.Services
 
         public async Task AddGroupListFromXtreamAsync(string xtreamUrl)
         {
-            if (groupLists.Count >= 2)
+            if (groupLists.Count >= 1)
                 return;
 
             // Parse the Xtream URL to extract authentication info
@@ -115,6 +107,75 @@ namespace M3UManager.Services
 
             groupLists.Add(groupList);
         }
+
+        public async Task<M3UGroupList?> LoadPlaylistFromXtreamAsync(string xtreamUrl)
+        {
+            // Parse the Xtream URL to extract authentication info
+            var authInfo = XtreamAuthInfo.Parse(xtreamUrl);
+            
+            if (string.IsNullOrWhiteSpace(authInfo.Username) || 
+                string.IsNullOrWhiteSpace(authInfo.Password) || 
+                string.IsNullOrWhiteSpace(authInfo.ServerUrl))
+            {
+                throw new ArgumentException("Invalid Xtream URL format. Expected format: http://server:port/username/password");
+            }
+
+            // Fetch Live TV categories and channels
+            var liveCategories = await _xtreamService.GetLiveCategoriesAsync(
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            var liveChannels = await _xtreamService.GetLiveStreamsAsync(
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            // Fetch VOD (Movies) categories and streams
+            var vodCategories = await _xtreamService.GetVodCategoriesAsync(
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            var vodStreams = await _xtreamService.GetVodStreamsAsync(
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            // Fetch Series (TV Shows) categories and streams
+            var seriesCategories = await _xtreamService.GetSeriesCategoriesAsync(
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            var seriesStreams = await _xtreamService.GetSeriesAsync(
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            // Create M3UGroupList from Xtream data with all content types
+            var groupList = M3UGroupList.FromXtreamData(
+                liveCategories, 
+                liveChannels,
+                vodCategories,
+                vodStreams,
+                seriesCategories,
+                seriesStreams,
+                authInfo.ServerUrl, 
+                authInfo.Username, 
+                authInfo.Password);
+
+            return groupList;
+        }
+
+        public void ReplaceGroupList(int index, M3UGroupList groupList)
+        {
+            if (index >= 0 && index < groupLists.Count)
+            {
+                groupLists[index] = groupList;
+            }
+        }
+
         public void RemoveGroupList(int modelId) => groupLists.Remove(GetModel(modelId));
         public int GroupListsCount() => groupLists.Count();
         public void DeleteGroupsFromList(int modelId, string[] selected)

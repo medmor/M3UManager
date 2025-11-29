@@ -7,17 +7,14 @@ namespace M3UManager.UI.Pages.Editor
     public partial class Editor
     {
 
-        [Inject] IM3UService m3uService { get; set; }
-        [Inject] IFileIOService fileIO { get; set; }
+        [Inject] IM3UService m3uService { get; set; } = default!;
+        [Inject] IFileIOService fileIO { get; set; } = default!;
         
         [Parameter] public string ContentTypeFilter { get; set; } = string.Empty;
         [Parameter] public string PageTitle { get; set; } = "Playlist Manager";
         [Parameter] public string PageIcon { get; set; } = "bi bi-collection-play";
         
-        public List<Models.Commands.Command> Commands { get; set; } = new List<Models.Commands.Command>();
-        
         private bool showXtreamDialog = false;
-        private bool showCacheDialog = false;
         private string xtreamUrl = string.Empty;
         private string cachedXtreamUrl = string.Empty;
         private DateTime? cachedDate = null;
@@ -56,9 +53,6 @@ namespace M3UManager.UI.Pages.Editor
                             var currentCount = m3uService.GroupListsCount();
                             m3uService.AddGroupList(cache.playlist);
                             
-                            var cmd = new Services.M3UEditorCommands.AddXtreamModelCommand(m3uService, currentCount, cache.xtreamUrl ?? "Cached");
-                            Commands.Add(cmd);
-                            
                             isAutoLoading = false;
                             StateHasChanged();
                             
@@ -91,21 +85,20 @@ namespace M3UManager.UI.Pages.Editor
                 // Wait a bit to let the UI render first
                 await Task.Delay(1000);
                 
-                // Remove the old cached playlist
-                m3uService.RemoveGroupList(modelIndex);
+                // Download fresh playlist to a temporary location
+                var tempPlaylist = await m3uService.LoadPlaylistFromXtreamAsync(url);
                 
-                // Download fresh playlist (this adds it automatically)
-                await m3uService.AddGroupListFromXtreamAsync(url);
-                
-                // Update cache with the new playlist
-                var newPlaylist = m3uService.GetGroupList(modelIndex);
-                if (newPlaylist != null)
+                if (tempPlaylist != null)
                 {
-                    await fileIO.SavePlaylistCache(newPlaylist, url);
+                    // Replace the existing playlist at index 0
+                    m3uService.ReplaceGroupList(0, tempPlaylist);
+                    
+                    // Update cache with the new playlist
+                    await fileIO.SavePlaylistCache(tempPlaylist, url);
+                    
+                    // Update UI
+                    await InvokeAsync(() => StateHasChanged());
                 }
-                
-                // Update UI
-                await InvokeAsync(() => StateHasChanged());
             }
             catch (Exception ex)
             {
@@ -121,9 +114,11 @@ namespace M3UManager.UI.Pages.Editor
             var textFile = await fileIO.OpenM3U();
             if (!string.IsNullOrEmpty(textFile))
             {
-                var cmd = new Services.M3UEditorCommands.AddModelCommand(m3uService, m3uService.GroupListsCount(), textFile);
-                cmd.Execute();
-                Commands.Add(cmd);
+                // Only load if we don't have a playlist yet
+                if (m3uService.GroupListsCount() == 0)
+                {
+                    m3uService.AddGroupList(textFile);
+                }
             }
         }
 
@@ -158,9 +153,6 @@ namespace M3UManager.UI.Pages.Editor
                 var currentCount = m3uService.GroupListsCount();
                 await m3uService.AddGroupListFromXtreamAsync(xtreamUrl);
                 
-                var cmd = new Services.M3UEditorCommands.AddXtreamModelCommand(m3uService, currentCount, xtreamUrl);
-                Commands.Add(cmd);
-                
                 // Save to cache
                 var playlist = m3uService.GetGroupList(currentCount);
                 if (playlist != null)
@@ -179,64 +171,6 @@ namespace M3UManager.UI.Pages.Editor
             }
         }
 
-        async Task LoadCachedPlaylist()
-        {
-            isLoading = true;
-            showCacheDialog = false;
-            StateHasChanged();
-
-            try
-            {
-                var cache = await fileIO.LoadPlaylistCache();
-                if (cache.playlist != null)
-                {
-                    var currentCount = m3uService.GroupListsCount();
-                    m3uService.AddGroupList(cache.playlist);
-                    
-                    var cmd = new Services.M3UEditorCommands.AddXtreamModelCommand(m3uService, currentCount, cache.xtreamUrl ?? "Cached");
-                    Commands.Add(cmd);
-                }
-                else
-                {
-                    errorMessage = "Failed to load cache: Cache data is corrupted or empty";
-                }
-                
-                isLoading = false;
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-                errorMessage = $"Failed to load cache: {ex.Message}";
-                isLoading = false;
-                StateHasChanged();
-            }
-        }
-
-        void RefreshFromUrl()
-        {
-            showCacheDialog = false;
-            xtreamUrl = cachedXtreamUrl; // Pre-populate with cached URL
-            ShowXtreamDialog();
-        }
-
-        void CloseCacheDialog()
-        {
-            showCacheDialog = false;
-            StateHasChanged();
-        }
-
-        public void Undo()
-        {
-            Commands[Commands.Count - 1].Undo();
-            Commands.RemoveAt(Commands.Count - 1);
-            StateHasChanged();
-        }
-        void CompareLists()
-        {
-            m3uService.CompareGroupLists();
-        }
-        void CopyToOther(int modelId, int sourceModelId)
-            => m3uService.AddGroupsToList(modelId, m3uService.GetGroupsFromModel(sourceModelId, m3uService.SelectedGroups));
         
         public void PlayChannel(M3UChannel channel)
         {
