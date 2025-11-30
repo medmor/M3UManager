@@ -85,12 +85,19 @@ A modern cross-platform IPTV player and playlist manager built with .NET MAUI an
   - [ ] Export/Import favorites
   - [ ] Share favorites as M3U file
 
-- [ ] **Recently Watched**
-  - [ ] Auto-populate viewing history
-  - [ ] Clear history option
-  - [ ] Resume from last position
+- [x] **Recently Watched**
+  - [x] Auto-populate viewing history
+  - [x] Clear history option
+  - [x] Resume from last position (position tracking implemented)
 
 ### ?? UI/UX Improvements
+
+#### Settings & Configuration
+- [x] **Settings Page**
+  - [x] Edit playlist URL
+  - [x] Refresh playlist from settings
+  - [x] Clear cache option
+  - [x] View current configuration
 
 #### Visual Enhancements
 - [ ] **Themes System**

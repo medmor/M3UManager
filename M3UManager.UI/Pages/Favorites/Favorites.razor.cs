@@ -131,12 +131,12 @@ namespace M3UManager.UI.Pages.Favorites
         private void PlayChannel(M3UChannel channel)
         {
             // Open the channel in a player window
-            _ = mediaPlayerService.OpenPlayerWindow(channel.Url, channel.Name);
+            _ = mediaPlayerService.OpenPlayerWindow(channel);
         }
 
         private async Task PlayChannelPip(M3UChannel channel)
         {
-            await mediaPlayerService.OpenPipPlayer(channel.Url, channel.Name);
+            await mediaPlayerService.OpenPipPlayer(channel);
         }
 
         private void PlayEpisode(XtreamEpisode episode)

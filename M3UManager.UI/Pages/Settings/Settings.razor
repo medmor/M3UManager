@@ -1,0 +1,125 @@
+@page "/settings"
+@using M3UManager.Services.ServicesContracts
+@inject IFileIOService fileIO
+
+<div class="d-flex" style="height: 100vh; overflow: hidden;">
+    <div class="flex-grow-1 d-flex flex-column" style="overflow: hidden;">
+        <!-- Top Header -->
+        <div class="bg-light border-bottom px-3 py-2 d-flex align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <h5 class="mb-0">
+                    <i class="bi bi-gear-fill"></i> Settings
+                </h5>
+            </div>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="flex-grow-1 overflow-auto p-4">
+            <div class="container-fluid" style="max-width: 800px;">
+                
+                <!-- Playlist Settings Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="bi bi-collection-play"></i> Playlist Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Xtream Codes URL</label>
+                            <div class="input-group">
+                                <input type="text" 
+                                       class="form-control" 
+                                       @bind="xtreamUrl" 
+                                       placeholder="http://server:port/username/password"
+                                       @bind:event="oninput" />
+                                <button class="btn btn-outline-primary" @onclick="SaveXtreamUrl" disabled="@isSaving">
+                                    @if (isSaving)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-save me-1"></i>
+                                    }
+                                    Save
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Format: http://server:port/username/password
+                            </div>
+                            @if (!string.IsNullOrEmpty(cachedXtreamUrl))
+                            {
+                                <div class="alert alert-info mt-2 mb-0" role="alert">
+                                    <small>
+                                        <i class="bi bi-check-circle"></i> Current URL: <code>@cachedXtreamUrl</code>
+                                        @if (cachedDate.HasValue)
+                                        {
+                                            <br />
+                                            <span><i class="bi bi-clock"></i> Last updated: @cachedDate.Value.ToShortDateString() @cachedDate.Value.ToShortTimeString()</span>
+                                        }
+                                    </small>
+                                </div>
+                            }
+                            @if (showSaveSuccess)
+                            {
+                                <div class="alert alert-success mt-2 mb-0" role="alert">
+                                    <i class="bi bi-check-circle-fill"></i> URL saved successfully!
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(errorMessage))
+                            {
+                                <div class="alert alert-danger mt-2 mb-0" role="alert">
+                                    <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
+                                </div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <button class="btn btn-primary" @onclick="RefreshPlaylist" disabled="@(isRefreshing || string.IsNullOrEmpty(cachedXtreamUrl))">
+                                @if (isRefreshing)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <span>Refreshing...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-arrow-clockwise me-2"></i>
+                                    <span>Refresh Playlist Now</span>
+                                }
+                            </button>
+                            <button class="btn btn-outline-danger ms-2" @onclick="ClearCache" disabled="@(isRefreshing || string.IsNullOrEmpty(cachedXtreamUrl))">
+                                <i class="bi bi-trash me-2"></i>
+                                Clear Cache
+                            </button>
+                        </div>
+
+                        @if (showRefreshSuccess)
+                        {
+                            <div class="alert alert-success" role="alert">
+                                <i class="bi bi-check-circle-fill"></i> Playlist refreshed successfully! Please reload the Live TV page.
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- App Information Section -->
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0"><i class="bi bi-info-circle"></i> About</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <strong>M3U Manager</strong>
+                        </div>
+                        <div class="text-muted">
+                            <small>
+                                Version 1.0<br />
+                                A modern IPTV player and playlist manager
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,3 +1,4 @@
+using M3UManager.Models;
 using M3UManager.Services.ServicesContracts;
 using System.Diagnostics;
 
@@ -9,6 +10,13 @@ namespace M3UManager.Services
         private Func<string, string, Task>? _windowFactory;
         private Func<string, string, Task>? _pipFactory;
         private readonly List<WeakReference> _playerWindows = new();
+        private readonly IWatchHistoryService _watchHistoryService;
+        private M3UChannel? _currentChannel;
+
+        public MediaPlayerService(IWatchHistoryService watchHistoryService)
+        {
+            _watchHistoryService = watchHistoryService;
+        }
 
         public void RegisterWindowFactory(Func<string, string, Task> windowFactory)
         {
@@ -87,6 +95,14 @@ namespace M3UManager.Services
             }
         }
 
+        public async Task OpenPlayerWindow(M3UChannel channel)
+        {
+            _currentChannel = channel;
+            // Track with initial position of 0
+            await _watchHistoryService.AddOrUpdateWatchHistory(channel, TimeSpan.Zero);
+            await OpenPlayerWindow(channel.Url, channel.Name);
+        }
+
         public async Task OpenPipPlayer(string streamUrl, string channelName)
         {
             // Stop any VLC process
@@ -101,6 +117,14 @@ namespace M3UManager.Services
             {
                 throw new InvalidOperationException("PiP factory not registered. Call RegisterPipFactory during app initialization.");
             }
+        }
+
+        public async Task OpenPipPlayer(M3UChannel channel)
+        {
+            _currentChannel = channel;
+            // Track with initial position of 0
+            await _watchHistoryService.AddOrUpdateWatchHistory(channel, TimeSpan.Zero);
+            await OpenPipPlayer(channel.Url, channel.Name);
         }
     }
 }

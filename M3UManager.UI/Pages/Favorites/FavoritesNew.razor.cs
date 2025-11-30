@@ -130,9 +130,9 @@ namespace M3UManager.UI.Pages.Favorites
             return Task.CompletedTask;
         }
 
-        private void PlayChannel(M3UChannel channel)
+        public void PlayChannel(M3UChannel channel)
         {
-            _ = mediaPlayerService.OpenPlayerWindow(channel.Url, channel.Name);
+            _ = mediaPlayerService.OpenPlayerWindow(channel);
         }
 
         private async Task PlayChannelPip(M3UChannel channel)

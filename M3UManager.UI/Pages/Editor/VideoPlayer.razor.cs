@@ -10,8 +10,8 @@ namespace M3UManager.UI.Pages.Editor
 
         public async void PlayChannel(M3UChannel channel)
         {
-            // Open native media player window (independent window)
-            await MediaPlayerService.OpenPlayerWindow(channel.Url, channel.Name);
+            // Open native media player window (independent window) with history tracking
+            await MediaPlayerService.OpenPlayerWindow(channel);
         }
     }
 }

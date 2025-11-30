@@ -20,6 +20,7 @@ namespace M3UManager.Services.Config
             services.AddSingleton<IM3UService, M3UService>();
             services.AddSingleton<IFileIOService, FileIO>();
             services.AddSingleton<IMediaPlayerService, MediaPlayerService>();
+            services.AddSingleton<IWatchHistoryService, WatchHistoryService>();
         }
     }
 }

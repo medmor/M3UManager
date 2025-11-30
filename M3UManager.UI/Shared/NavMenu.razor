@@ -7,18 +7,21 @@
     <!-- Navigation Items -->
     <div class="flex-grow-1 py-3">
         <NavLink href="/movies" class="nav-item text-center d-block py-3 text-white text-decoration-none" 
+                 Match="NavLinkMatch.All"
                  title="Movies">
             <i class="bi bi-film d-block mb-1" style="font-size: 1.5rem;"></i>
             <small class="d-block" style="font-size: 0.65rem;">Movies</small>
         </NavLink>
 
         <NavLink href="/tvshows" class="nav-item text-center d-block py-3 text-white text-decoration-none"
+                 Match="NavLinkMatch.All"
                  title="TV Shows">
             <i class="bi bi-tv d-block mb-1" style="font-size: 1.5rem;"></i>
             <small class="d-block" style="font-size: 0.65rem;">TV Shows</small>
         </NavLink>
 
-        <NavLink href="/livetv" class="nav-item text-center d-block py-3 text-white text-decoration-none"
+        <NavLink href="/" class="nav-item text-center d-block py-3 text-white text-decoration-none"
+                 Match="NavLinkMatch.All"
                  title="Live TV">
             <i class="bi bi-broadcast d-block mb-1" style="font-size: 1.5rem;"></i>
             <small class="d-block" style="font-size: 0.65rem;">Live TV</small>
@@ -27,9 +30,27 @@
         <div class="border-top border-secondary my-2"></div>
 
         <NavLink href="/favorites" class="nav-item text-center d-block py-3 text-white text-decoration-none"
+                 Match="NavLinkMatch.All"
                  title="Favorites">
             <i class="bi bi-star-fill d-block mb-1" style="font-size: 1.5rem;"></i>
             <small class="d-block" style="font-size: 0.65rem;">Favorites</small>
+        </NavLink>
+
+        <NavLink href="/recentlywatched" class="nav-item text-center d-block py-3 text-white text-decoration-none"
+                 Match="NavLinkMatch.All"
+                 title="Recently Watched">
+            <i class="bi bi-clock-history d-block mb-1" style="font-size: 1.5rem;"></i>
+            <small class="d-block" style="font-size: 0.65rem;">History</small>
+        </NavLink>
+    </div>
+
+    <!-- Footer Settings -->
+    <div class="border-top border-secondary">
+        <NavLink href="/settings" class="nav-item text-center d-block py-3 text-white text-decoration-none"
+                 Match="NavLinkMatch.All"
+                 title="Settings">
+            <i class="bi bi-gear-fill d-block mb-1" style="font-size: 1.5rem;"></i>
+            <small class="d-block" style="font-size: 0.65rem;">Settings</small>
         </NavLink>
     </div>
 

@@ -1,0 +1,142 @@
+@page "/recentlywatched"
+@using M3UManager.Models
+@using M3UManager.Services.ServicesContracts
+@implements IDisposable
+
+<div class="d-flex" style="height: 100vh; overflow: hidden;">
+    <div class="flex-grow-1 d-flex flex-column" style="overflow: hidden;">
+        <!-- Top Header -->
+        <div class="bg-light border-bottom px-3 py-2 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i> Recently Watched
+                </h5>
+                @if (historyItems.Count > 0)
+                {
+                    <span class="badge bg-primary">@historyItems.Count items</span>
+                }
+            </div>
+            
+            @if (historyItems.Count > 0)
+            {
+                <button class="btn btn-sm btn-outline-danger" @onclick="ShowClearConfirmation">
+                    <i class="bi bi-trash"></i> Clear History
+                </button>
+            }
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-grow-1 overflow-auto p-3">
+            @if (isLoading)
+            {
+                <div class="d-flex align-items-center justify-content-center h-100">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            }
+            else if (historyItems.Count == 0)
+            {
+                <div class="d-flex align-items-center justify-content-center h-100">
+                    <div class="text-center p-5">
+                        <i class="bi bi-clock-history text-muted" style="font-size: 80px;"></i>
+                        <h3 class="mt-4 text-muted">No Watch History</h3>
+                        <p class="text-muted">Channels you watch will appear here</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var item in historyItems)
+                    {
+                        <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+                            <div class="card h-100 shadow-sm">
+                                @if (!string.IsNullOrEmpty(item.ChannelLogo))
+                                {
+                                    <img src="@item.ChannelLogo" class="card-img-top" alt="@item.ChannelName" 
+                                         style="height: 150px; object-fit: cover;"
+                                         onerror="this.style.display='none';" />
+                                }
+                                else
+                                {
+                                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" 
+                                         style="height: 150px;">
+                                        <i class="bi bi-tv text-white" style="font-size: 3rem;"></i>
+                                    </div>
+                                }
+                                
+                                <div class="card-body d-flex flex-column">
+                                    <h6 class="card-title text-truncate" title="@item.ChannelName">
+                                        @item.ChannelName
+                                    </h6>
+                                    <p class="card-text text-muted small mb-2">
+                                        <i class="bi bi-folder"></i> @item.ChannelGroup
+                                    </p>
+                                    <p class="card-text text-muted small mb-2">
+                                        <i class="bi bi-clock"></i> @GetTimeAgo(item.LastWatched)
+                                    </p>
+                                    @if (item.LastPosition.TotalSeconds > 5)
+                                    {
+                                        <div class="mb-2">
+                                            <small class="text-primary">
+                                                <i class="bi bi-play-circle"></i> Resume from @FormatTime(item.LastPosition)
+                                            </small>
+                                        </div>
+                                    }
+                                    
+                                    <div class="mt-auto d-flex gap-2">
+                                        <button class="btn btn-primary btn-sm flex-grow-1" 
+                                                @onclick="() => PlayChannel(item)">
+                                            <i class="bi bi-play-fill"></i> Play
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm" 
+                                                @onclick="() => PlayInPip(item)"
+                                                title="Play in Picture-in-Picture">
+                                            <i class="bi bi-pip"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" 
+                                                @onclick="() => RemoveItem(item)"
+                                                title="Remove from history">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (showClearDialog)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 2000;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle"></i> Clear Watch History
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseClearDialog"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to clear all watch history? This action cannot be undone.</p>
+                    <p class="text-muted mb-0">
+                        <small>This will remove @historyItems.Count item(s) from your history.</small>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseClearDialog">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" @onclick="ClearHistory">
+                        <i class="bi bi-trash"></i> Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
