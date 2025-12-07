@@ -7,7 +7,11 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="mb-0 fw-bold">
             <i class="bi bi-tv"></i> Channels
-            <span class="badge bg-secondary ms-1">@Channels.Count()</span>
+            <span class="badge bg-secondary ms-1">@FilteredChannels.Count()</span>
+            @if (!string.IsNullOrEmpty(searchText) && FilteredChannels.Count() != Channels.Count())
+            {
+                <span class="badge bg-info ms-1">of @Channels.Count()</span>
+            }
         </h6>
         <div class="d-flex gap-2">
             <!-- View Toggle -->
@@ -115,13 +119,6 @@
                     </div>
                 </div>
             }
-            
-            @if (channelsToShow < FilteredChannels.Count())
-            {
-                <button class="btn btn-sm btn-outline-primary w-100 mt-2" @onclick="LoadMore">
-                    <i class="bi bi-arrow-down-circle"></i> Load more (@(FilteredChannels.Count() - channelsToShow) remaining)
-                </button>
-            }
         </div>
     }
     else
@@ -166,15 +163,6 @@
                     </div>
                 }
             </div>
-            
-            @if (channelsToShow < FilteredChannels.Count())
-            {
-                <div class="text-center mt-3">
-                    <button class="btn btn-outline-primary" @onclick="LoadMore">
-                        <i class="bi bi-arrow-down-circle"></i> Load more (@(FilteredChannels.Count() - channelsToShow) remaining)
-                    </button>
-                </div>
-            }
         </div>
     }
 }

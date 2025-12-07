@@ -28,7 +28,6 @@ namespace M3UManager.UI.Components
         private DisplayMode ViewMode { get; set; }
         private List<M3UChannel> FilteredChannels { get; set; } = new();
         private string searchText = string.Empty;
-        private int channelsToShow = 200;
         private const string VIEW_MODE_PREFERENCE_KEY = "ChannelsDisplayViewMode";
 
         protected override void OnInitialized()
@@ -48,7 +47,6 @@ namespace M3UManager.UI.Components
         private void FilterChannels(ChangeEventArgs e)
         {
             searchText = e.Value?.ToString() ?? string.Empty;
-            channelsToShow = 200; // Reset pagination when filtering
             UpdateFilteredChannels();
         }
 
@@ -66,24 +64,85 @@ namespace M3UManager.UI.Components
             }
             else
             {
+                var searchTerms = searchText.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                
                 FilteredChannels = Channels
-                    .Where(c => c.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-                               (!string.IsNullOrEmpty(c.Group) && c.Group.Contains(searchText, StringComparison.OrdinalIgnoreCase)))
+                    .Select(channel => new { Channel = channel, Score = CalculateSearchScore(channel, searchTerms) })
+                    .Where(x => x.Score > 0)
+                    .OrderByDescending(x => x.Score)
+                    .Select(x => x.Channel)
                     .ToList();
             }
             
             StateHasChanged();
         }
 
+        private int CalculateSearchScore(M3UChannel channel, string[] searchTerms)
+        {
+            var score = 0;
+            var name = channel.Name?.ToLower() ?? string.Empty;
+            var group = channel.Group?.ToLower() ?? string.Empty;
+
+            foreach (var term in searchTerms)
+            {
+                // Exact match in name gets highest score
+                if (name == term)
+                    score += 100;
+                // Name starts with term
+                else if (name.StartsWith(term))
+                    score += 50;
+                // Name contains term
+                else if (name.Contains(term))
+                    score += 30;
+                // Fuzzy match in name (allows for typos)
+                else if (FuzzyMatch(name, term))
+                    score += 15;
+
+                // Group matches
+                if (group == term)
+                    score += 40;
+                else if (group.Contains(term))
+                    score += 20;
+
+                // Check individual words in name
+                var nameWords = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var word in nameWords)
+                {
+                    if (word.StartsWith(term))
+                        score += 25;
+                }
+            }
+
+            return score;
+        }
+
+        private bool FuzzyMatch(string source, string term)
+        {
+            if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(term))
+                return false;
+
+            // Simple fuzzy matching: check if characters appear in order
+            var sourceIndex = 0;
+            var termIndex = 0;
+
+            while (sourceIndex < source.Length && termIndex < term.Length)
+            {
+                if (source[sourceIndex] == term[termIndex])
+                    termIndex++;
+                sourceIndex++;
+            }
+
+            return termIndex == term.Length;
+        }
+
         private IEnumerable<M3UChannel> GetVisibleChannels()
         {
-            return FilteredChannels.Take(channelsToShow);
+            return FilteredChannels;
         }
 
         private void ClearSearch()
         {
             searchText = string.Empty;
-            channelsToShow = 200;
             UpdateFilteredChannels();
         }
 
@@ -104,13 +163,6 @@ namespace M3UManager.UI.Components
         private string GetChannelClass(M3UChannel channel)
         {
             return SelectedChannel == channel ? "selected" : string.Empty;
-        }
-
-        private void LoadMore()
-        {
-            channelsToShow += 200;
-            if (channelsToShow > FilteredChannels.Count)
-                channelsToShow = FilteredChannels.Count;
         }
 
         private void ChangeViewMode(DisplayMode mode)
@@ -212,7 +264,6 @@ namespace M3UManager.UI.Components
         public void UpdateChannels(List<M3UChannel> channels)
         {
             Channels = channels;
-            channelsToShow = 200;
             UpdateFilteredChannels();
             StateHasChanged();
         }
