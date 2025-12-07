@@ -18,14 +18,15 @@ namespace M3UManager.UI.Pages.Editor
         ChannelsList channelsList = default!;
         Dictionary<string, M3UGroup> filtredGroups = default!;
         string groupFilterString = "";
+        string sortOption = "count"; // default: count, name, original
 
         protected override void OnInitialized()
         {
             var model = m3UService.GetModel(M3UListModelId);
             filtredGroups = model.M3UGroups
                 .Where(g => IsGroupMatchingContentFilter(g.Value))
-                .OrderByDescending(g => g.Value.Channels.Count)
                 .ToDictionary(g => g.Key, g => g.Value);
+            ApplySorting();
         }
 
         private bool IsGroupMatchingContentFilter(M3UGroup group)
@@ -71,7 +72,6 @@ namespace M3UManager.UI.Pages.Editor
             {
                 filtredGroups = model.M3UGroups
                     .Where(g => IsGroupMatchingContentFilter(g.Value))
-                    .OrderByDescending(g => g.Value.Channels.Count)
                     .ToDictionary(g => g.Key, g => g.Value);
             }
             else
@@ -79,9 +79,20 @@ namespace M3UManager.UI.Pages.Editor
                 filtredGroups = model.M3UGroups
                     .Where(g => IsGroupMatchingContentFilter(g.Value) && 
                                g.Value.Name.Contains(groupFilterString, System.StringComparison.CurrentCultureIgnoreCase))
-                    .OrderByDescending(g => g.Value.Channels.Count)
                     .ToDictionary(g => g.Key, g => g.Value);
             }
+            ApplySorting();
+        }
+
+        void ApplySorting()
+        {
+            var sorted = sortOption switch
+            {
+                "name" => filtredGroups.OrderBy(g => GetDisplayGroupName(g.Value.Name)),
+                "original" => filtredGroups.OrderBy(g => g.Key),
+                _ => filtredGroups.OrderByDescending(g => g.Value.Channels.Count) // "count" is default
+            };
+            filtredGroups = sorted.ToDictionary(g => g.Key, g => g.Value);
         }
 
         // Removed comparison feature - single playlist only

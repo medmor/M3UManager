@@ -9,6 +9,15 @@
             </h6>
         </div>
 
+        <!-- Sort By Dropdown -->
+        <div class="mb-2">
+            <select class="form-select form-select-sm" @bind="sortOption" @bind:after="ApplySorting">
+                <option value="count">Sort by: Channel Count</option>
+                <option value="name">Sort by: Name (A-Z)</option>
+                <option value="original">Sort by: Original Order</option>
+            </select>
+        </div>
+
         <!-- Search Box -->
         <div class="mb-2">
             <div class="input-group input-group-sm">
